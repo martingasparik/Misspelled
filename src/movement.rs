@@ -57,7 +57,11 @@ pub fn setup_player(
 
 // Handle player movement with keyboard input
 pub fn character_movement(
-    mut query: Query<(&mut Transform, &mut MovementState, &mut FacingDirection), With<Player>>,
+    mut query: Query<(
+        &mut Transform,
+        &mut MovementState, 
+        &mut FacingDirection
+    ), With<Player>>,
     input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
 ) {

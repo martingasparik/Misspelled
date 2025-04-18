@@ -2,12 +2,13 @@ use bevy::prelude::*;
 use std::time::Duration;
 
 // Animation constants
-pub const FIRST_RUNNING: usize = 40;
-pub const LAST_RUNNING: usize = 43;
-pub const FPS_RUNNING: u8 = 12;
-pub const FIRST_IDLE: usize = 36;
-pub const LAST_IDLE: usize = 39;
+pub const CHARACTER_OFFSET: usize = 5;
+pub const FIRST_IDLE: usize = 9*CHARACTER_OFFSET;
+pub const LAST_IDLE: usize = FIRST_IDLE+3;
+pub const FIRST_RUNNING: usize = LAST_IDLE+1;
+pub const LAST_RUNNING: usize = FIRST_RUNNING+3;
 pub const FPS_IDLE: u8 = 8;
+pub const FPS_RUNNING: u8 = 12;
 
 #[derive(Component, PartialEq, Clone, Copy, Debug)]
 pub enum PlayerState {
@@ -44,7 +45,10 @@ impl AnimationConfig {
 }
 
 // Handle animations
-pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfig, &mut Sprite)>) {
+pub fn execute_animations(
+    time: Res<Time>,
+    mut query: Query<(&mut AnimationConfig, &mut Sprite)>
+) {
     for (mut config, mut sprite) in &mut query {
         // Tick the animation timer
         config.frame_timer.tick(time.delta());
