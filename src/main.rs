@@ -1,6 +1,7 @@
 mod animation;
 mod movement;
 mod camera;
+mod spell;
 
 use bevy::prelude::*;
 
@@ -36,6 +37,10 @@ fn main() {
                 camera::update_camera,
             )
         )
+        // Spell casting systems
+        .add_event::<spell::SpellCastEvent>()
+        .add_plugins(spell::StackSpellSystemPlugin)
+
         .run();
 }
 
@@ -48,7 +53,8 @@ fn setup_game(
     // Setup camera
     camera::setup_camera(commands.reborrow());
 
-    // Create the texture atlas (layout: 16x32 sprites, 9 columns, 10 rows) for character
+    // Create the texture atlas for character sprite
+    // Layout: 16x32 sprites, 9 columns, 10 rows
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
