@@ -38,9 +38,9 @@ fn main() {
             )
         )
         // Spell casting systems
-        .add_event::<spell::SpellCastEvent>() 
+        .add_event::<spell::SpellCastEvent>()
         .add_plugins(spell::StackSpellSystemPlugin)
-        
+
         .run();
 }
 
@@ -52,9 +52,8 @@ fn setup_game(
 ) {
     // Setup camera
     camera::setup_camera(commands.reborrow());
-    
 
-    // Create the texture atlas for character sprite 
+    // Create the texture atlas for character sprite
     // Layout: 16x32 sprites, 9 columns, 10 rows
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);

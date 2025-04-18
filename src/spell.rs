@@ -95,7 +95,7 @@ pub fn setup_spell_system(
     commands.spawn((
         Sprite {
                 color: Color::srgba(0.1, 0.1, 0.1, 0.7),
-                custom_size: Some(Vec2::new(200.0, 35.0)), //todo: resize with text 
+                custom_size: Some(Vec2::new(200.0, 35.0)), //todo: resize with text
                 ..default()
         },
         Transform::from_xyz(0.0, SPELL_TEXT_OFFSET_Y, 1.0),
@@ -148,7 +148,7 @@ pub fn handle_spell_input(
     if kbd.just_pressed(KeyCode::Escape) {
         spell_stack.toggle();
     }
-    
+
     // Process backspace - remove last character
     if kbd.just_pressed(KeyCode::Backspace) && !spell_stack.characters.is_empty() {
         spell_stack.pop();
@@ -166,8 +166,7 @@ pub fn handle_spell_input(
                 spell_name,
             });
 
-            // Clear the stack and deactivate input
-            //spell_stack.clear(); //toggle already clearrs
+            // Deactivate input
             spell_stack.toggle();
         }
     }
@@ -257,7 +256,7 @@ fn identify_spell(input: &str) -> SpellType {
 }
 
 // todo: implement proper spell execution
-// Function to execute spell effects based on type 
+// Function to execute spell effects based on type
 pub fn execute_spells(
     mut spell_events: EventReader<SpellCastEvent>,
     // Add other parameters as needed for spell effects
