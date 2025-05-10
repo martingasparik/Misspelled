@@ -3,6 +3,7 @@ mod movement;
 mod camera;
 mod spell;
 mod orc;
+mod fireball;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
