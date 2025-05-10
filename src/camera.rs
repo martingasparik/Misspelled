@@ -20,12 +20,16 @@ pub fn update_camera(
     player_query: Query<&Transform, (With<Player>, Without<SmoothCamera>)>,
     time: Res<Time>,
 ) {
-    let Ok(mut camera_transform) = camera_query.single_mut() else {
-        return;
+    // Get single camera transform or return early if none exists
+    let mut camera_transform = match camera_query.get_single_mut() {
+        Ok(transform) => transform,
+        Err(_) => return,
     };
 
-    let Ok(player_transform) = player_query.single() else {
-        return;
+    // Get single player transform or return early if none exists
+    let player_transform = match player_query.get_single() {
+        Ok(transform) => transform,
+        Err(_) => return,
     };
 
     let Vec3 { x, y, .. } = player_transform.translation;
