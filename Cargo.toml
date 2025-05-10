@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = "0.16.0-rc.3"
+bevy = "0.15.3"
+bevy_rapier2d = "0.29.0"
