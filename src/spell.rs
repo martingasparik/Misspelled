@@ -94,9 +94,9 @@ pub fn setup_spell_system(
     // Background for the spell text
     commands.spawn((
         Sprite {
-                color: Color::srgba(0.1, 0.1, 0.1, 0.7),
-                custom_size: Some(Vec2::new(200.0, 35.0)), //todo: resize with text
-                ..default()
+            color: Color::srgba(0.1, 0.1, 0.1, 0.7),
+            custom_size: Some(Vec2::new(200.0, 35.0)), //todo: resize with text
+            ..default()
         },
         Transform::from_xyz(0.0, SPELL_TEXT_OFFSET_Y, 1.0),
         Visibility::Hidden,
@@ -130,15 +130,15 @@ pub fn handle_spell_input(
     mut key_events: EventReader<KeyboardInput>,
     kbd: Res<ButtonInput<KeyCode>>,
 ) {
-    // Toggle spell input with Tab
-    if kbd.just_pressed(KeyCode::Tab) {
+    // Toggle spell input with Space
+    if kbd.just_pressed(KeyCode::Space) {
         spell_stack.toggle();
     }
     // Toggle on spell input with Enter
     if !spell_stack.is_active() && kbd.just_pressed(KeyCode::Enter) {
         spell_stack.toggle();
     }
-    
+
     // Only process inputs if spell system is active
     if !spell_stack.is_active() {
         return;
@@ -161,7 +161,7 @@ pub fn handle_spell_input(
             let spell_type = identify_spell(&spell_name);
 
             // Emit spell cast event
-            spell_cast_events.write(SpellCastEvent {
+            spell_cast_events.send(SpellCastEvent {
                 spell_type,
                 spell_name,
             });
@@ -182,10 +182,10 @@ pub fn handle_spell_input(
                         spell_stack.push(first_char);
                     }
                 }
-            } else if key_event.logical_key == Key::Space {
+            } /*else if key_event.logical_key == Key::Space {
                 // For multi-word spells
                 spell_stack.push(' ');
-            }
+            }*/
         }
     }
 }
@@ -198,7 +198,7 @@ pub fn update_spell_text(
 ) {
     if spell_stack.is_changed() {
         // Update text content
-        if let Ok((mut text, mut text_visibility)) = text_query.single_mut() {
+        if let Ok((mut text, mut text_visibility)) = text_query.get_single_mut() {
             // Update the text content directly
             **text = spell_stack.as_string();
 
@@ -227,7 +227,7 @@ pub fn update_text_position(
     mut text_query: Query<&mut Transform, (With<SpellText>, Without<Player>, Without<SpellTextBackground>)>,
     mut bg_query: Query<&mut Transform, (With<SpellTextBackground>, Without<Player>, Without<SpellText>)>,
 ) {
-    if let Ok(player_transform) = player_query.single() {
+    if let Ok(player_transform) = player_query.get_single() {
         let player_position = player_transform.translation;
 
         // Update text position
