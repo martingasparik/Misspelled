@@ -24,6 +24,19 @@ impl Default for MovementState {
     }
 }
 
+/// Health component for entities
+#[derive(Component)]
+/// Tracks current health; used by player and enemies
+pub struct Health {
+    pub health: f32,
+}
+impl Health {
+    /// Creates a new Health with the given amount
+    pub fn new(amount: f32) -> Self {
+        Health { health: amount }
+    }
+}
+
 // Set up the player entity with all necessary components
 pub fn setup_player(
     mut commands: Commands,
