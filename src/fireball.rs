@@ -1,107 +1,222 @@
 use bevy::prelude::*;
+
+use bevy::time::Time;
+use bevy::time::Real;
+
+
 use crate::spell::{SpellType, SpellCastEvent};
-use crate::movement::Player;
-use std::time::Duration;
+use crate::movement::{Player, FacingDirection};
 use crate::animation::AnimationConfig;
-use std::f32::consts::{PI,TAU};
 
-pub const FIRST_INDEX: usize = 0;
-pub const LAST_INDEX: usize = 11;
+pub const FIREBALL_SPEED: f32 = 200.0;
+pub const FIREBALL_LIFETIME: f32 = 5.0; 
+pub const FIREBALL_DAMAGE: f32 = 10.0;
+pub const FIREBALL_FIRST_INDEX: usize = 0;
+pub const FIREBALL_LAST_INDEX: usize = 11;
+pub const FIREBALL_FPS: u8 = 12;
 
-
-
-
+// Component to mark entities as enemies
 #[derive(Component)]
-pub struct Fireball{
+pub struct Enemy;
+
+// Component for fireball spell entities
+#[derive(Component)]
+pub struct Fireball {
     piercing: bool,
+    disabled: bool,
     pub damage: f32,
-    timer: Timer,
+    pub lifetime: Timer,
+    pub direction: Vec2,
 }
 
 impl Default for Fireball {
     fn default() -> Self {
         Self {
             piercing: false,
-            damage: 10.0,
-            timer: Timer::from_seconds(5.0,TimerMode::Once),
+            disabled: false,
+            damage: FIREBALL_DAMAGE,
+            lifetime: Timer::from_seconds(FIREBALL_LIFETIME, TimerMode::Once),
+            direction: Vec2::new(1.0, 0.0), 
         }
     }
 }
-#[derive(Resource, Default)]
-pub struct FireballAssets {
-    pub flying: Handle<Image>,
-    pub impact: Handle<Image>,
+
+impl Fireball {
+    pub fn new(direction: Vec2, damage: f32) -> Self {
+        Self {
+            direction,
+            damage,
+            ..Default::default()
+        }
+    }
+
+    pub fn disable(&mut self) {
+        if !self.piercing {
+            self.disabled = true;
+        }
+    }
+
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
+    }
 }
 
+// Plugin for fireball spell systems
+pub struct FireballPlugin;
 
+impl Plugin for FireballPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (
+            handle_fireball_casting,
+            update_fireballs,
+            handle_fireball_collisions,
+            despawn_expired_fireballs,
+        ));
+    }
+}
 
-fn spawn_fireball(
+// System to handle the fireball spell casting event
+fn handle_fireball_casting(
     mut commands: Commands,
+    mut spell_events: EventReader<SpellCastEvent>,
+    player_query: Query<(&Transform, &FacingDirection), With<Player>>,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture = asset_server.load("spells/fireball_1.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(32,32),6,2,None,None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    for event in spell_events.read() {
+        if let SpellType::Fireball = event.spell_type {
+            // Get player position and facing direction
+            if let Ok((player_transform, facing)) = player_query.get_single() {
+                // Determine fireball direction based on player facing
+                let direction = if facing.facing_right {
+                    Vec2::new(1.0, 0.0)
+                } else {
+                    Vec2::new(-1.0, 0.0)
+                };
 
-    let mid_air_fireball = AnimationConfig::new(FIRST_INDEX,LAST_INDEX, 12);
+                // Position the fireball slightly in front of the player
+                let offset = direction * 30.0; // Offset to place fireball in front of player
+                let spawn_position = player_transform.translation + Vec3::new(offset.x, offset.y, 0.0);
 
-    commands.spawn((
-        Sprite {
-            image: texture,
-            texture_atlas: Some(TextureAtlas {
-                layout: texture_atlas_layout,
-                index: FIRST_INDEX,
-            }),
-            ..default()
-        },
-        Transform::from_translation(Vec3::splat(5.0)),
+                // Load texture and create texture atlas
+                let fireball_texture = asset_server.load("spells/fireball_1.png");
+                let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 6, 2, None, None);
+                let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
+                // Create animation configuration
+                let fireball_animation = AnimationConfig::new(
+                    FIREBALL_FIRST_INDEX,
+                    FIREBALL_LAST_INDEX,
+                    FIREBALL_FPS,
+                );
 
-    ));
-}
-// === Move Fireballs Forward and Trigger Impact ===
+                // Spawn fireball entity
+                commands.spawn((
+                    Sprite {
+                        image: fireball_texture.clone(),
+                        texture_atlas: Some(TextureAtlas {
+                            layout: texture_atlas_layout,
+                            index: FIREBALL_FIRST_INDEX,
+                        }),
+                        flip_x: !facing.facing_right,
+                        ..default()
+                    },
+                    Transform::from_translation(spawn_position)
+                        .with_scale(Vec3::splat(2.0)), // Size of the fireball
+                    Fireball::new(direction, FIREBALL_DAMAGE),
+                    fireball_animation,
+                    Name::new("Fireball"),
+                ));
 
-/*fn move_fireballs(
-    mut commands: Commands,
-    mut fireballs: Query<(Entity, &mut Transform), With<Fireball>>,
-    time: Res<Time>,
-    fireball_assets: Res<FireballAssets>,
-) {
-    let speed = 300.0;
-
-    for (entity, mut transform) in fireballs.iter_mut() {
-        transform.translation.x += speed * time.delta_seconds();
-
-        if transform.translation.x > 600.0 {
-            // Despawn fireball
-            commands.entity(entity).despawn();
-
-            // Spawn impact with timer
-            commands.spawn((
-                SpriteBundle {
-                    texture: fireball_assets.impact.clone(),
-                    transform: *transform,
-                    ..default()
-                },
-                FireballImpact,
-                Timer::from_seconds(0.4, TimerMode::Once),
-            ));
+                // Print debug info
+                println!("Fireball cast in direction: {:?}", direction);
+            }
         }
     }
 }
 
-// === Despawn Impact After Short Delay ===
-
-fn handle_fireball_impacts()
-    mut commands: Commands,
-    time: Res<Time>,
-    mut impacts: Query<(Entity, &mut Timer), With<FireballImpact>>,
+// System to update fireball positions
+fn update_fireballs(
+    mut fireball_query: Query<(&mut Transform, &Fireball)>,
+    time: Res<Time<Real>>,
 ) {
-    for (entity, mut timer) in impacts.iter_mut() {
-        timer.tick(time.delta());
-        if timer.finished() {
+    for (mut transform, fireball) in fireball_query.iter_mut() {
+        if !fireball.is_disabled() {
+            let movement = fireball.direction * FIREBALL_SPEED * time.delta_secs();
+            transform.translation.x += movement.x;
+            transform.translation.y += movement.y;
+        }
+    }
+}
+
+
+
+// System to handle fireball collision with enemies
+fn handle_fireball_collisions(
+    mut commands: Commands,
+    mut fireball_query: Query<(Entity, &Transform, &mut Fireball)>,
+    enemy_query: Query<(Entity, &Transform), With<Enemy>>,
+) {
+    for (fireball_entity, fireball_transform, mut fireball) in fireball_query.iter_mut() {
+        if fireball.is_disabled() {
+            continue;
+        }
+
+        // Check collisions with enemies
+        for (enemy_entity, enemy_transform) in enemy_query.iter() {
+            // Simple circle collision detection
+            let distance = fireball_transform.translation.distance(enemy_transform.translation);
+
+            // Assuming the combined radius of fireball and enemy is 25.0 units
+            if distance < 25.0 {
+                // Apply damage to enemy (you'd typically modify a Health component)
+                println!("Enemy hit for {} damage!", fireball.damage);
+
+
+                fireball.disable();
+                
+                if fireball.is_disabled() {
+                    commands.entity(fireball_entity).despawn();
+                }
+                if !fireball.piercing {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+fn despawn_expired_fireballs(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Fireball)>,
+    time: Res<Time>,
+) {
+    for (entity, mut fireball) in query.iter_mut() {
+        fireball.lifetime.tick(time.delta());
+
+        if fireball.lifetime.finished() {
             commands.entity(entity).despawn();
         }
     }
-}*/
+}
+// TO DO Implement the execution
+pub fn execute_fireball(
+    entity: Entity,
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
+    player_query: &Query<(&Transform, &FacingDirection), With<Player>>,
+) {
+    // This is a utility function if you need to programmatically cast a fireball
+    // It could be called from other systems or events
+    if let Ok((player_transform, facing)) = player_query.get_single() {
+        let direction = if facing.facing_right {
+            Vec2::new(1.0, 0.0)
+        } else {
+            Vec2::new(-1.0, 0.0)
+        };
+
+        // Rest of fireball spawning logic...
+        println!("Programmatically casting fireball");
+    }
+}
