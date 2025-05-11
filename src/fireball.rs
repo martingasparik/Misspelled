@@ -5,11 +5,12 @@ use bevy::time::Real;
 
 
 use crate::spell::{SpellType, SpellCastEvent};
-use crate::movement::{Player, FacingDirection};
+use crate::player_code::Player;
+use crate::player_movement::FacingDirection;
 use crate::animation::AnimationConfig;
 
 pub const FIREBALL_SPEED: f32 = 200.0;
-pub const FIREBALL_LIFETIME: f32 = 5.0; 
+pub const FIREBALL_LIFETIME: f32 = 5.0;
 pub const FIREBALL_DAMAGE: f32 = 10.0;
 pub const FIREBALL_FIRST_INDEX: usize = 0;
 pub const FIREBALL_LAST_INDEX: usize = 11;
@@ -200,7 +201,7 @@ fn despawn_expired_fireballs(
     }
 }
 /*
-// TO DO Implement the execution
+// TODO targeting and collision
 pub fn execute_fireball(
     entity: Entity,
     commands: &mut Commands,
