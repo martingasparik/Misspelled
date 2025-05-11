@@ -3,8 +3,9 @@ use bevy_rapier2d::prelude::* ;
 use crate::player_code::Player;
 use crate::orc::{OrcEnemy, OrcState};
 
-const ORC_SPEED: f32 = 60.0;
-const ATTACK_RANGE: f32 = 40.0;
+const ORC_SPEED: f32 = 80.0;
+const ATTACK_RANGE: f32 = 50.0;
+const ATTACK_COOLDOWN: f32 = 1.0;
 
 pub struct OrcMovementPlugin;
 impl Plugin for OrcMovementPlugin {
@@ -14,36 +15,37 @@ impl Plugin for OrcMovementPlugin {
 }
 
 fn orc_movement_system(
-    mut query: Query<(&Transform, &mut Velocity, &mut OrcEnemy)>,
+    mut query: Query<(&Transform, &mut Velocity, &mut OrcEnemy, &mut Sprite)>,
     player_q: Query<&Transform, With<Player>>,
     time: Res<Time>,
 ) {
-    // get the player position (bail out if there's no single player)
     let player_pos = match player_q.get_single() {
         Ok(tf) => tf.translation.truncate(),
         Err(_) => return,
     };
 
-    // move each orc toward the player (or switch to attacking)
-    for (transform, mut vel, mut orc) in query.iter_mut() {
+    for (transform, mut vel, mut orc, mut sprite) in query.iter_mut() {
         let orc_pos = transform.translation.truncate();
-        let dir = (player_pos - orc_pos).normalize_or_zero();
-        let dist = player_pos.distance(orc_pos);
-
-        if dist > ATTACK_RANGE {
-            // Move toward player
-            vel.linvel = dir * ORC_SPEED;
-
-            // Only change state if we're not already walking
-            if orc.state != OrcState::Walking {
+        let to_player = player_pos - orc_pos;
+        let dist = to_player.length();
+        
+        // Update sprite flip based on direction to player
+        // Only flip if the x-component is significant enough
+        if to_player.x.abs() > 5.0 { // Add a small threshold to prevent flipping when nearly vertical
+            // If player is to the right, don't flip (face right)
+            // If player is to the left, flip horizontally (face left)
+            sprite.flip_x = to_player.x < 0.0;
+        }
+        // If x is very small (player is nearly directly above/below), keep current orientation
+        
+        if dist > 0.1 { // Small threshold to prevent jitter
+            let dir = to_player.normalize_or_zero();
+            
+            if dist > ATTACK_RANGE {
+                vel.linvel = dir * ORC_SPEED;
                 orc.state = OrcState::Walking;
-            }
-        } else {
-            // Stop and attack
-            vel.linvel = Vec2::ZERO;
-
-            // Only change state if we're not already attacking
-            if orc.state != OrcState::Attacking {
+            } else {
+                vel.linvel = Vec2::ZERO;
                 orc.state = OrcState::Attacking;
             }
         }
