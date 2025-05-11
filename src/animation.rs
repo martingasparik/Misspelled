@@ -1,23 +1,14 @@
 use bevy::prelude::*;
 use std::time::Duration;
 
-// Animation constants
-pub const CHARACTER_OFFSET: usize = 5;
-pub const FIRST_IDLE: usize = 9*CHARACTER_OFFSET;
-pub const LAST_IDLE: usize = FIRST_IDLE+3;
-pub const FIRST_RUNNING: usize = LAST_IDLE+1;
-pub const LAST_RUNNING: usize = FIRST_RUNNING+3;
-pub const FPS_IDLE: u8 = 8;
-pub const FPS_RUNNING: u8 = 12;
-
 #[derive(Component, PartialEq, Clone, Copy, Debug)]
-pub enum PlayerState {
+pub enum SpriteState {
     Idle,
     Running,
 }
-impl Default for PlayerState {
+impl Default for SpriteState {
     fn default() -> Self {
-        PlayerState::Idle
+        SpriteState::Idle
     }
 }
 
@@ -66,34 +57,6 @@ pub fn execute_animations(
                 // Update the current frame tracker
                 config.current_frame = atlas.index;
             }
-        }
-    }
-}
-
-// Animation state management system
-pub fn update_animation_state(
-    mut query: Query<(&mut PlayerState, &mut AnimationConfig, &crate::movement::MovementState)>,
-) {
-    for (
-        mut player_state, 
-        mut config, 
-        movement_state
-    ) in query.iter_mut() {
-        let current_state = *player_state;
-        let is_moving = *movement_state == crate::movement::MovementState::Moving;
-
-        match (current_state, is_moving) {
-            (PlayerState::Idle, true) => {
-                // Change to running animation
-                *player_state = PlayerState::Running;
-                *config = AnimationConfig::new(FIRST_RUNNING, LAST_RUNNING, FPS_RUNNING);
-            },
-            (PlayerState::Running, false) => {
-                // Change to idle animation
-                *player_state = PlayerState::Idle;
-                *config = AnimationConfig::new(FIRST_IDLE, LAST_IDLE, FPS_IDLE);
-            },
-            _ => {} // No state change needed
         }
     }
 }

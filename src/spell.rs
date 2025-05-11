@@ -5,7 +5,7 @@ use bevy::{
         KeyboardInput},
 };
 use std::process::exit; // For the "exit" spell
-use crate::movement::Player;
+use crate::player_code::Player;
 
 // Constants for display positioning
 const SPELL_TEXT_OFFSET_Y: f32 = 40.0; // Offset from player
