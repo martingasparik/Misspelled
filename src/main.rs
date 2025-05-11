@@ -1,8 +1,10 @@
 mod animation;
-mod movement;
 mod camera;
 mod spell;
 mod orc;
+mod player_movement;
+mod player_code;
+mod player_animation;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
@@ -42,9 +44,9 @@ fn main() {
         .add_systems(
             Update,
             (
-                movement::character_movement,
-                movement::update_sprite_direction,
-                animation::update_animation_state,
+                player_movement::character_movement,
+                player_animation::update_sprite_direction,
+                player_animation::update_animation_state,
                 animation::execute_animations,
                 camera::update_camera,
             ),
@@ -57,14 +59,16 @@ fn setup_game(
     asset_server: Res<AssetServer>,
     mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    // 1) spawn our camera
+    // Setup camera
     camera::setup_camera(commands.reborrow());
 
-    // 2) load the player atlas
+    // Create the texture atlas for character sprite
+    // Layout: 16x32 sprites, 9 columns, 10 rows
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = atlas_layouts.add(layout);
 
-    // 3) spawn the player
-    movement::setup_player(commands, texture, texture_atlas_layout);
+    // Setup player entity
+    player_code::setup_player(commands, texture, texture_atlas_layout);
+    
 }
