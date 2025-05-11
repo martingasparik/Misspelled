@@ -52,8 +52,8 @@ pub struct SpellText;
 #[derive(Component)]
 pub struct SpellTextBackground;
 
-// Enum for spell types; identification and functionality are at the bottom of this file
-#[derive(Debug)]
+// Enum for spell types
+#[derive(Debug, Clone, Copy)]
 pub enum SpellType {
     Fireball,
     Blink,
@@ -182,10 +182,7 @@ pub fn handle_spell_input(
                         spell_stack.push(first_char);
                     }
                 }
-            } /*else if key_event.logical_key == Key::Space {
-                // For multi-word spells
-                spell_stack.push(' ');
-            }*/
+            }
         }
     }
 }
@@ -255,30 +252,32 @@ fn identify_spell(input: &str) -> SpellType {
     }
 }
 
-// todo: implement proper spell execution
-// Function to execute spell effects based on type
+// Execute spells based on type - now properly connected to fireball.rs
 pub fn execute_spells(
     mut spell_events: EventReader<SpellCastEvent>,
-    // Add other parameters as needed for spell effects
 ) {
     for event in spell_events.read() {
         match event.spell_type {
             SpellType::Fireball => {
+                // The actual fireball spawning is handled in handle_fireball_casting 
+                // in fireball.rs, which responds to this event
                 println!("Casting Fireball spell!");
-            }
+            },
             SpellType::Blink => {
                 println!("Casting Blink spell!");
-            }
+                // TODO: Implement blink spell logic
+            },
             SpellType::Shield => {
                 println!("Casting Shield spell!");
-            }
+                // TODO: Implement shield spell logic
+            },
             SpellType::Exit => {
                 println!("Casting Exit");
                 exit(0);
-            }
+            },
             SpellType::Unknown => {
                 println!("Unknown spell: {}", event.spell_name);
-            }
+            },
         }
     }
 }

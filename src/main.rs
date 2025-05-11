@@ -2,9 +2,11 @@ mod animation;
 mod camera;
 mod spell;
 mod orc;
+
 mod player_movement;
 mod player_code;
 mod player_animation;
+mod fireball;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
@@ -32,13 +34,14 @@ fn main() {
         // ——— Rapier 2D physics ———
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
 
+
         // ——— Orc enemy bundle ———
         .add_plugins(OrcPlugin)
 
         // ——— Spell-casting systems ———
         .add_event::<spell::SpellCastEvent>()
         .add_plugins(spell::StackSpellSystemPlugin)
-
+        .add_plugins(fireball::FireballPlugin)
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
