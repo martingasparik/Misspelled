@@ -99,7 +99,7 @@ fn handle_fireball_casting(
                 let spawn_position = player_transform.translation + Vec3::new(offset.x, offset.y, 0.0);
 
                 // Load texture and create texture atlas
-                let fireball_texture = asset_server.load("spells/fireball_1.png");
+                let fireball_texture = asset_server.load("spells/03.png");
                 let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 6, 2, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
@@ -199,6 +199,7 @@ fn despawn_expired_fireballs(
         }
     }
 }
+/*
 // TO DO Implement the execution
 pub fn execute_fireball(
     entity: Entity,
@@ -220,3 +221,4 @@ pub fn execute_fireball(
         println!("Programmatically casting fireball");
     }
 }
+*/
