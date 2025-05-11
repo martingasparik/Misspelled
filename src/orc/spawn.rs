@@ -50,17 +50,26 @@ fn spawn_orc(
         },
         Transform::from_translation(spawn_pos).with_scale(Vec3::splat(5.0)),
         
+        RigidBody::Dynamic,
+        LockedAxes::ROTATION_LOCKED, // This prevents ALL rotation
+        Velocity {
+            linvel: Vec2::ZERO,
+            angvel: 0.0, // Explicitly set angular velocity to 0
+        },
+        Damping {
+            linear_damping: 2.0,
+            angular_damping: 10.0, // High value to kill any rotation quickly
+        },
+
         // Game logic components
-        OrcEnemy::new(20.0, 5.0),
+        OrcEnemy::new(20.0, 5.0), // This now includes attack timers
         Health::new(20.0),
         
         // Animation components
         AnimationConfig::new(0, 7, 10), // Idle animation 
         
         // Physics components
-        Collider::ball(40.0),
-        RigidBody::Dynamic,
-        Velocity::default(),
+        Collider::ball(5.0),
         ActiveEvents::COLLISION_EVENTS,
     ));
 }
