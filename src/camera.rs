@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::movement::Player;
+use crate::player_code::Player;
 
 /// How quickly the camera should snap to the desired player location
 const CAMERA_DECAY_RATE: f32 = 2.0;

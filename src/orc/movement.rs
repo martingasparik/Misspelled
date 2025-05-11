@@ -1,8 +1,7 @@
 use bevy::prelude::* ;
 use bevy_rapier2d::prelude::* ;
-use crate::movement::Player;
-use crate::orc::OrcEnemy;
-use crate::orc::OrcState;
+use crate::player_code::Player;
+use crate::orc::{OrcEnemy, OrcState};
 
 const ORC_SPEED: f32 = 60.0;
 const ATTACK_RANGE: f32 = 40.0;
