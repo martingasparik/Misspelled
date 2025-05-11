@@ -34,18 +34,9 @@ fn update_orc_animation(
             },
             OrcState::Attacking => {
                 if config.first_sprite_index != 16 {
-                    *config = AnimationConfig::new(16, 21, 15);
+                    *config = AnimationConfig::new(16, 21, 10);
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 16;
-                    }
-                }
-            },
-            OrcState::AttackCooldown => {
-                // During cooldown, show idle animation
-                if config.first_sprite_index != 0 {
-                    *config = AnimationConfig::new(0, 5, 8);
-                    if let Some(atlas) = &mut sprite.texture_atlas {
-                        atlas.index = 0;
                     }
                 }
             },

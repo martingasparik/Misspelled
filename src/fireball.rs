@@ -5,7 +5,8 @@ use bevy::time::Real;
 
 
 use crate::spell::{SpellType, SpellCastEvent};
-use crate::movement::{Player, FacingDirection};
+use crate::player_code::Player;
+use crate::player_movement::FacingDirection;
 use crate::animation::AnimationConfig;
 
 pub const FIREBALL_SPEED: f32 = 200.0;
