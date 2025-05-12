@@ -19,6 +19,7 @@ pub struct BlinkingEffect {
     pub phase: BlinkPhase,
     pub target_position: Vec3,
     pub timer: Timer,
+    pub original_animation_config: Option<AnimationConfig>,
 }
 
 // Enum to track the current phase of the blink
@@ -46,13 +47,19 @@ impl Plugin for BlinkPlugin {
 fn handle_blink_casting(
     mut commands: Commands,
     mut spell_events: EventReader<SpellCastEvent>,
-    mut player_query: Query<(Entity, &Transform, &FacingDirection, &mut Sprite), With<Player>>,
+    mut player_query: Query<(
+        Entity,
+        &Transform,
+        &FacingDirection,
+        &mut Sprite,
+        Option<&AnimationConfig>
+    ), With<Player>>,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     for event in spell_events.read() {
         if let SpellType::Blink = event.spell_type {
-            if let Ok((player_entity, player_transform, facing, mut sprite)) = player_query.get_single_mut() {
+            if let Ok((player_entity, player_transform, facing, mut sprite, prev_animation_config)) = player_query.get_single_mut() {
                 let direction = if facing.facing_right {
                     Vec3::new(1.0, 0.0, 0.0)
                 } else {
@@ -62,11 +69,19 @@ fn handle_blink_casting(
                 // Calculate target position for the blink
                 let target_position = player_transform.translation + direction * BLINK_DISTANCE;
 
-                // Set up the blink effect component
+                // Create animation configuration for the blink
+                let blink_animation = AnimationConfig::new(
+                    BLINK_ANIMATION_FIRST_INDEX,
+                    BLINK_ANIMATION_LAST_INDEX,
+                    BLINK_ANIMATION_FPS,
+                );
+
+                // Set up the blink effect component, preserving the original animation config
                 let blink_effect = BlinkingEffect {
                     phase: BlinkPhase::Disappearing,
                     target_position,
                     timer: Timer::from_seconds(BLINK_PHASE_DURATION, TimerMode::Once),
+                    original_animation_config: prev_animation_config.cloned(),
                 };
 
                 // Load blink animation texture atlas
@@ -89,13 +104,6 @@ fn handle_blink_casting(
 
                 // Adjust sprite scale to match original 16x16 size
                 sprite.custom_size = Some(Vec2::new(16.0, 16.0));
-
-                // Create animation configuration for the blink
-                let blink_animation = AnimationConfig::new(
-                    BLINK_ANIMATION_FIRST_INDEX,
-                    BLINK_ANIMATION_LAST_INDEX,
-                    BLINK_ANIMATION_FPS,
-                );
 
                 // Apply blink effect and animation to player
                 commands.entity(player_entity)
@@ -163,10 +171,15 @@ fn update_blink_animation(
                 // Remove custom size to ensure original scaling
                 sprite.custom_size = None;
 
+                // Restore original animation configuration
+                if let Some(original_config) = blink_effect.original_animation_config.take() {
+                    commands.entity(entity)
+                        .insert(original_config);
+                }
+
                 // Clean up - remove the blink components
                 commands.entity(entity)
                     .remove::<BlinkingEffect>()
-                    .remove::<AnimationConfig>()
                     .remove::<PreviousSprite>();
             }
         }
