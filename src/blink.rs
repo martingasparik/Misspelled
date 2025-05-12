@@ -71,11 +71,14 @@ fn handle_blink_casting(
 
                 // Load blink animation texture atlas
                 let blink_texture = asset_server.load("spells/10.png"); // Adjust path to your blink texture
+
+                // Create a texture atlas layout for the 32x32 blink sprite
                 let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 3, 2, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
                 // Save previous texture information to restore later
                 let prev_texture = sprite.image.clone();
+                let prev_atlas = sprite.texture_atlas.clone();
 
                 // Update player sprite to use blink animation
                 sprite.image = blink_texture;
@@ -83,6 +86,9 @@ fn handle_blink_casting(
                     layout: texture_atlas_layout,
                     index: BLINK_ANIMATION_FIRST_INDEX,
                 });
+
+                // Adjust sprite scale to match original 16x16 size
+                sprite.custom_size = Some(Vec2::new(16.0, 16.0));
 
                 // Create animation configuration for the blink
                 let blink_animation = AnimationConfig::new(
@@ -95,7 +101,10 @@ fn handle_blink_casting(
                 commands.entity(player_entity)
                     .insert(blink_effect)
                     .insert(blink_animation)
-                    .insert(PreviousTexture(prev_texture));
+                    .insert(PreviousSprite {
+                        texture: prev_texture,
+                        atlas: prev_atlas,
+                    });
 
                 println!("Blink spell cast! Target position: {:?}", target_position);
             }
@@ -103,9 +112,12 @@ fn handle_blink_casting(
     }
 }
 
-// Component to store the previous texture to restore after blinking
+// Component to store the previous sprite to restore after blinking
 #[derive(Component)]
-struct PreviousTexture(Handle<Image>);
+struct PreviousSprite {
+    texture: Handle<Image>,
+    atlas: Option<TextureAtlas>,
+}
 
 // System to update the blink animation and movement
 fn update_blink_animation(
@@ -115,11 +127,11 @@ fn update_blink_animation(
         &mut Transform,
         &mut BlinkingEffect,
         &mut Sprite,
-        &PreviousTexture
+        &PreviousSprite
     )>,
     time: Res<Time<Real>>,
 ) {
-    for (entity, mut transform, mut blink_effect, mut sprite, prev_texture) in player_query.iter_mut() {
+    for (entity, mut transform, mut blink_effect, mut sprite, prev_sprite) in player_query.iter_mut() {
         // Update the timer
         blink_effect.timer.tick(time.delta());
 
@@ -145,13 +157,17 @@ fn update_blink_animation(
             }
             BlinkPhase::Complete => {
                 // Restore the player's original texture/sprite
-                sprite.image = prev_texture.0.clone();
+                sprite.image = prev_sprite.texture.clone();
+                sprite.texture_atlas = prev_sprite.atlas.clone();
+
+                // Remove custom size to ensure original scaling
+                sprite.custom_size = None;
 
                 // Clean up - remove the blink components
                 commands.entity(entity)
                     .remove::<BlinkingEffect>()
                     .remove::<AnimationConfig>()
-                    .remove::<PreviousTexture>();
+                    .remove::<PreviousSprite>();
             }
         }
     }
