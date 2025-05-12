@@ -3,7 +3,7 @@ use crate::animation::{AnimationConfig, SpriteState};
 use crate::player_movement::FacingDirection;
 
 // Animation constants
-pub const CHARACTER_OFFSET: usize = 6;
+pub const CHARACTER_OFFSET: usize = 5;
 pub const FIRST_IDLE: usize = 9*CHARACTER_OFFSET;
 pub const LAST_IDLE: usize = FIRST_IDLE+3;
 pub const FIRST_RUNNING: usize = LAST_IDLE+1;
