@@ -42,7 +42,7 @@ fn update_orc_animation(
             },
             OrcState::Hurt => {
                 if config.first_sprite_index != 32 {
-                    *config = AnimationConfig::new(32, 39, 10);
+                    *config = AnimationConfig::new(32, 35, 10);
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 32;
                     }
@@ -50,7 +50,7 @@ fn update_orc_animation(
             },
             OrcState::Dying => {
                 if config.first_sprite_index != 40 {
-                    *config = AnimationConfig::new(40, 47, 8);
+                    *config = AnimationConfig::new(40, 43, 8);
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 40;
                     }
