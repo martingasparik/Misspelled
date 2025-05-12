@@ -7,6 +7,7 @@ mod player_movement;
 mod player_code;
 mod player_animation;
 mod fireball;
+mod blink;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
@@ -42,6 +43,7 @@ fn main() {
         .add_event::<spell::SpellCastEvent>()
         .add_plugins(spell::StackSpellSystemPlugin)
         .add_plugins(fireball::FireballPlugin)
+        .add_plugins(blink::BlinkPlugin)
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
