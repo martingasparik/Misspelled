@@ -12,11 +12,22 @@ pub use collision::OrcCollisionPlugin;
 
 use bevy::prelude::*;
 
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
+pub enum OrcState {
+    Idle,
+    Walking,
+    Attacking,
+    Hurt,
+    Dying,
+}
+
 #[derive(Component, Debug)]
 pub struct OrcEnemy {
     pub health: f32,
     pub damage: f32,
     pub state: OrcState,
+    pub attack_cooldown: f32,
+    pub attack_cooldown_timer: f32,
 }
 
 impl OrcEnemy {
@@ -25,17 +36,10 @@ impl OrcEnemy {
             health,
             damage,
             state: OrcState::Idle,
+            attack_cooldown: 0.0,
+            attack_cooldown_timer: 1.0,
         }
     }
-}
-
-#[derive(Component, Clone, Copy, Debug, PartialEq)]
-pub enum OrcState {
-    Idle,
-    Walking,
-    Attacking,
-    Hurt,
-    Dying,
 }
 
 // Main Orc plugin that bundles everything together

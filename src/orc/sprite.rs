@@ -19,7 +19,6 @@ fn update_orc_animation(
             OrcState::Idle => {
                 if config.first_sprite_index != 0 {
                     *config = AnimationConfig::new(0, 5, 8);
-                    // Reset the current frame to the first frame of this animation
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 0;
                     }
@@ -28,7 +27,6 @@ fn update_orc_animation(
             OrcState::Walking => {
                 if config.first_sprite_index != 8 {
                     *config = AnimationConfig::new(8, 15, 12);
-                    // Reset the current frame to the first frame of this animation
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 8;
                     }
@@ -36,8 +34,7 @@ fn update_orc_animation(
             },
             OrcState::Attacking => {
                 if config.first_sprite_index != 16 {
-                    *config = AnimationConfig::new(16, 21, 15);
-                    // Reset the current frame to the first frame of this animation
+                    *config = AnimationConfig::new(16, 21, 10);
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 16;
                     }
@@ -46,7 +43,6 @@ fn update_orc_animation(
             OrcState::Hurt => {
                 if config.first_sprite_index != 32 {
                     *config = AnimationConfig::new(32, 39, 10);
-                    // Reset the current frame to the first frame of this animation
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 32;
                     }
@@ -55,12 +51,11 @@ fn update_orc_animation(
             OrcState::Dying => {
                 if config.first_sprite_index != 40 {
                     *config = AnimationConfig::new(40, 47, 8);
-                    // Reset the current frame to the first frame of this animation
                     if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = 40;
                     }
                 }
-            },
+            }
         }
     }
 }
