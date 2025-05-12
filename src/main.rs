@@ -8,12 +8,15 @@ mod player_code;
 mod player_animation;
 mod fireball;
 mod blink;
+mod hp_display;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
 use bevy::math::UVec2;
 use bevy_rapier2d::prelude::*;
+
 use orc::OrcPlugin;
+use hp_display::HealthDisplayPlugin;
 
 fn main() {
     App::new()
@@ -35,6 +38,9 @@ fn main() {
         // ——— Rapier 2D physics ———
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
 
+
+        // ——— Health display system ———
+        .add_plugins(HealthDisplayPlugin) // Add the health display plugin
 
         // ——— Orc enemy bundle ———
         .add_plugins(OrcPlugin)
