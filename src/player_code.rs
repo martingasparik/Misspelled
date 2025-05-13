@@ -53,7 +53,7 @@ pub fn setup_player(
 
         // Game logic components
         Player,
-        Health::new(8.0),
+        Health::new(10.0),
         Shield::new(0.0),
         FacingDirection {facing_right: true},
         MovementState::Idle,
