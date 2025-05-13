@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use crate::orc::{OrcEnemy, OrcState};
 use crate::player_code::{Health, Player};
+use crate::shield::DamageEvent;
 
 /// Marker component for the attack‐hitbox sensor attached to each Orc
 #[derive(Component)]
@@ -177,7 +178,8 @@ fn orc_player_collision(
 
         // We've already checked the sector with our collider shape,
         // so if there's a collision, the player is in the attack zone
-        health.health -= orc.damage;
+        //health.health -= orc.damage;
+        damage_event.send(DamageEvent{amount: 5.0});
         info!(
             "Player hit by Orc {:?}! New health: {:.1}",
             hitbox.owner, health.health

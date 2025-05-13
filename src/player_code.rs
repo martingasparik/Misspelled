@@ -6,8 +6,6 @@ use crate::animation::{AnimationConfig, SpriteState};
 use crate::player_animation::{FIRST_IDLE, FPS_IDLE, LAST_IDLE};
 use crate::player_movement::{FacingDirection, MovementState};
 
-//todo: struct Entity w/ health and shit
-// - Player, Enemies --|> enitity
 #[derive(Component)]
 pub struct Player;
 
@@ -17,7 +15,6 @@ pub struct Player;
 pub struct Health {
     pub health: f32,
 }
-
 impl Health {
     /// Creates a new Health with the given amount
     pub fn new(amount: f32) -> Self {
@@ -25,6 +22,13 @@ impl Health {
     }
 }
 
+#[derive(Component)]
+pub struct Shield{
+    pub shield: f32,
+}
+impl Shield {
+    pub fn new(amount: f32) -> Self {Shield {shield: amount}}
+}
 // Set up the player entity with all necessary components
 pub fn setup_player(
     mut commands: Commands,
@@ -49,7 +53,8 @@ pub fn setup_player(
 
         // Game logic components
         Player,
-        Health::new(5.0),
+        Health::new(8.0),
+        Shield::new(0.0),
         FacingDirection {facing_right: true},
         MovementState::Idle,
         SpriteState::Idle,

@@ -265,7 +265,6 @@ pub fn execute_spells(
             },
             SpellType::Blink => {
                 println!("Casting Blink spell!");
-                // TODO: Implement blink spell logic
             },
             SpellType::Shield => {
                 println!("Casting Shield spell!");
