@@ -46,7 +46,7 @@ fn setup_health_display(
     let health_bar_width = 349.0 * 1.5;
     let health_bar_height = 48.0 * 1.5;
 
-    let hearts_image = asset_server.load("UI/hp_containers2.png");
+    let hearts_image = asset_server.load("UI/hp_containers.png");
     let red = asset_server.load("UI/red.png");
     let blue = asset_server.load("UI/blue.png");
 
