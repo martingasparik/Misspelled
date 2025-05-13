@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy::math::UVec2;
-use bevy::prelude::TextureAtlasLayout;
+use bevy::math::IVec2;
+use bevy::sprite::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
 
@@ -17,10 +17,12 @@ mod hp_display;
 mod shield;
 mod spellbook;
 mod world;
+mod audio;
 
 use shield::ShieldPlugin;
 use orc::OrcPlugin;
 use hp_display::{HealthDisplayPlugin};
+use audio::AudioPlugin; // Import the AudioPlugin
 
 fn main() {
     App::new()
@@ -40,13 +42,16 @@ fn main() {
         )
 
         // ——— Rapier 2D physics ———
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physontentReference[oaicite:5]{index=5}
-        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay :contentReference[oaicite:6]{index=6}
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physics
+        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay
         .insert_resource(DebugRenderContext {
-            enabled: true,     // Turn on all colliders/hurtboxes :contentReference[oaicite:7]{index=7}
+            enabled: true,     // Turn on all colliders/hurtboxes
             ..default()
         })
         .add_event::<CollisionEvent>()
+
+        // ——— Audio system ———
+        .add_plugins(AudioPlugin) // Add the audio plugin
 
         // ——— Health display system ———
         .add_plugins(HealthDisplayPlugin) // Add the health display plugin
@@ -61,7 +66,7 @@ fn main() {
         .add_plugins(blink::BlinkPlugin)
         .add_plugins(ShieldPlugin)
         .add_plugins(spellbook::SpellbookPlugin)
-        
+
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
@@ -92,20 +97,7 @@ fn setup_game(
     let library = asset_server.load("library.png");
     world::setup_world(commands.reborrow(), library);
     
-/*
-    commands.spawn((
-        Sprite {
-            image: library,
-            ..default()
-        },
-        Transform {
-            translation: Vec3::new(0.0, 32.0, -1.0), // Position at z=-1 so it's behind other entities
-            scale: Vec3::splat(2.0),
-            ..default()
-        },
-        LibraryBackground,
-    ));
-*/
+    
     // Create the texture atlas for character sprite
     // Layout: 16x32 sprites, 9 columns, 10 rows
     let texture = asset_server.load("characters_atlas.png");
