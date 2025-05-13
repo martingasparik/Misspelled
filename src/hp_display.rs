@@ -22,13 +22,10 @@ struct HeartContainer;
 #[derive(Resource)]
 struct MaxHealth(f32);
 
-#[derive(Resource)]
-struct MaxShield(f32);
 
 impl Plugin for HealthDisplayPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MaxHealth>()
-            .init_resource::<MaxShield>()
             .add_systems(Startup, setup_health_display)
             .add_systems(Update, (update_health_display, update_shield_display));
     }
@@ -37,14 +34,7 @@ impl Plugin for HealthDisplayPlugin {
 // Default implementation for MaxHealth resource
 impl Default for MaxHealth {
     fn default() -> Self {
-        MaxHealth(8.0) // Default max health, adjust as needed
-    }
-}
-
-// Default implementation for MaxShield resource
-impl Default for MaxShield {
-    fn default() -> Self {
-        MaxShield(8.0) // Default max shield, adjust as needed
+        MaxHealth(10.0) // Default max health, adjust as needed
     }
 }
 
@@ -53,12 +43,12 @@ fn setup_health_display(
     asset_server: Res<AssetServer>,
 ) {
     // Define health bar dimensions
-    let health_bar_width = 285.0 * 1.5;
+    let health_bar_width = 349.0 * 1.5;
     let health_bar_height = 48.0 * 1.5;
 
-    let hearts_image = asset_server.load("ui/hp_containers.png");
-    let red = asset_server.load("ui/red.png");
-    let blue = asset_server.load("ui/blue.png");
+    let hearts_image = asset_server.load("UI/hp_containers.png");
+    let red = asset_server.load("UI/red.png");
+    let blue = asset_server.load("UI/blue.png");
 
     // Container node
     commands
@@ -160,7 +150,7 @@ fn update_health_display(
 
 fn update_shield_display(
     player_query: Query<&Shield, With<Player>>,
-    max_shield: Res<MaxShield>,
+    max_shield: Res<MaxHealth>,
     mut shield_query: Query<&mut Node, With<ShieldBarFill>>,
 ) {
     if let Ok(shield) = player_query.get_single() {
