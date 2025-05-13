@@ -29,10 +29,6 @@ pub fn setup_world(
     //Top Wall collider
     commands.spawn((
         Collider::cuboid(WALL_WIDTH, WALL_HEIGHT),
-        Sprite {
-            color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-            ..default()
-        },
         Transform {
             translation: Vec3::new(0.0, WALL_HEIGHT+32.0, 0.0),
             ..Default::default()
@@ -41,22 +37,14 @@ pub fn setup_world(
     // Bottom
     commands.spawn((
         Collider::cuboid(WALL_WIDTH, WALL_HEIGHT),
-        Sprite {
-            color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-            ..default()
-        },
         Transform {
-            translation: Vec3::new(0.0, -(2.*WALL_HEIGHT + 32.0), 0.0),
+            translation: Vec3::new(0.0, -(2.*WALL_HEIGHT + 20.0), 0.0),
             ..Default::default()
         }
     ));
     //Left
     commands.spawn((
         Collider::cuboid(WALL_HEIGHT, WALL_HEIGHT),
-        Sprite {
-            color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-            ..default()
-        },    
         Transform {
             translation: Vec3::new(-WALL_WIDTH, -32.0, 0.0),
             ..Default::default()
@@ -65,10 +53,6 @@ pub fn setup_world(
     //Right
     commands.spawn((
         Collider::cuboid(WALL_HEIGHT, WALL_HEIGHT),
-        Sprite {
-            color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-            ..default()
-        },
         Transform {
             translation: Vec3::new(WALL_WIDTH, -32.0, 0.0),
             ..Default::default()
