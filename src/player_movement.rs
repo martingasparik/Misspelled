@@ -1,5 +1,6 @@
 // Bevy examples - 2D top-down camera
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use crate::player_code::Player;
 
 // Player movement speed factor
@@ -21,19 +22,18 @@ impl Default for MovementState {
     }
 }
 
-// Handle player movement with keyboard input
+// Handle player movement with keyboard input - updated for physics
 pub fn character_movement(
     mut query: Query<(
-        &mut Transform,
-        &mut MovementState, 
+        &mut Velocity,
+        &mut MovementState,
         &mut FacingDirection
     ), With<Player>>,
     input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
 ) {
     for (
-        mut transform, 
-        mut movement_state, 
+        mut velocity,
+        mut movement_state,
         mut facing
     ) in query.iter_mut() {
         let mut direction = Vec2::ZERO;
@@ -67,8 +67,12 @@ pub fn character_movement(
             facing.facing_right = direction.x > 0.0;
         }
 
-        // Apply sprite movement
-        transform.translation += (direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs()).extend(0.0);
-
+        // Apply movement through physics velocity instead of transform
+        if is_moving {
+            velocity.linvel = direction.normalize_or_zero() * PLAYER_SPEED;
+        } else {
+            // Stop the player when no keys are pressed
+            velocity.linvel = Vec2::ZERO;
+        }
     }
 }
