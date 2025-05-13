@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use crate::player_code::Health;
 use crate::player_code::Player;
+use crate::player_code::Health;
+use crate::player_code::Shield;
 
 pub struct HealthDisplayPlugin;
 
@@ -12,17 +13,24 @@ struct HealthBar;
 struct HealthBarFill;
 
 #[derive(Component)]
+struct ShieldBarFill;
+
+#[derive(Component)]
 struct HeartContainer;
 
-// Resource to store the maximum health value for scaling
+// Resource to store the maximum health and shield values for scaling
 #[derive(Resource)]
 struct MaxHealth(f32);
+
+#[derive(Resource)]
+struct MaxShield(f32);
 
 impl Plugin for HealthDisplayPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MaxHealth>()
+            .init_resource::<MaxShield>()
             .add_systems(Startup, setup_health_display)
-            .add_systems(Update, update_health_display);
+            .add_systems(Update, (update_health_display, update_shield_display));
     }
 }
 
@@ -33,16 +41,24 @@ impl Default for MaxHealth {
     }
 }
 
+// Default implementation for MaxShield resource
+impl Default for MaxShield {
+    fn default() -> Self {
+        MaxShield(20.0) // Default max shield, adjust as needed
+    }
+}
+
 fn setup_health_display(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    // Define health bar dimensions 48 285
-    let health_bar_width = 285.0;
-    let health_bar_height = 48.0; // Smaller height for the bar
+    // Define health bar dimensions
+    let health_bar_width = 285.0 * 1.5;
+    let health_bar_height = 48.0 * 1.5;
 
     let hearts_image = asset_server.load("hp_containers.png");
     let red = asset_server.load("red.png");
+    let blue = asset_server.load("blue.png");
 
     // Container node
     commands
@@ -67,17 +83,38 @@ fn setup_health_display(
                     HealthBar,
                 ))
                 .with_children(|parent| {
-                    // Health bar fill (red rectangle)
+                    // Health bar fill (red rectangle) - positioned absolutely
                     parent.spawn((
+                        Node {
+                            position_type: PositionType::Absolute,
+                            left: Val::Px(0.0),
+                            top: Val::Px(0.0),
+                            width: Val::Percent(100.0), // Start at 100% width
+                            height: Val::Percent(100.0),
+                            ..default()
+                        },
                         ImageNode {
                             image: red.into(),
-                            rect: Some( Rect {
-                                min: Vec2::new(0.0, 0.0),
-                                max: Vec2::new(health_bar_width,health_bar_height).into()
-                            }),
                             ..default()
                         },
                         HealthBarFill,
+                    ));
+
+                    // Shield bar fill (blue rectangle) - positioned absolutely on top of red
+                    parent.spawn((
+                        Node {
+                            position_type: PositionType::Absolute,
+                            left: Val::Px(0.0),
+                            top: Val::Px(0.0),
+                            width: Val::Percent(0.0), // Start at 0% width
+                            height: Val::Percent(100.0),
+                            ..default()
+                        },
+                        ImageNode {
+                            image: blue.into(),
+                            ..default()
+                        },
+                        ShieldBarFill,
                     ));
                 });
 
@@ -96,10 +133,6 @@ fn setup_health_display(
                     parent.spawn((
                         ImageNode {
                             image: hearts_image.into(),
-                            rect: Some( Rect { 
-                                min: Vec2::new(0.0, 0.0), 
-                                max: Vec2::new(health_bar_width,health_bar_height).into() 
-                            }),
                             ..default()
                         },
                         HeartContainer,
@@ -113,7 +146,6 @@ fn update_health_display(
     max_health: Res<MaxHealth>,
     mut health_fill_query: Query<&mut Node, With<HealthBarFill>>,
 ) {
-    
     if let Ok(health) = player_query.get_single() {
         if let Ok(mut style) = health_fill_query.get_single_mut() {
             // Calculate health percentage
@@ -122,6 +154,20 @@ fn update_health_display(
             let health_percent = health_percent.clamp(0.0, 100.0);
             // Update the width of the health bar fill
             style.width = Val::Percent(health_percent);
+        }
+    }
+}
+
+fn update_shield_display(
+    player_query: Query<&Shield, With<Player>>,
+    max_shield: Res<MaxShield>,
+    mut shield_query: Query<&mut Node, With<ShieldBarFill>>,
+) {
+    if let Ok(shield) = player_query.get_single() {
+        if let Ok(mut style) = shield_query.get_single_mut() {
+            let shield_percent = (shield.shield / max_shield.0) * 100.0;
+            let shield_percent = shield_percent.clamp(0.0, 100.0);
+            style.width = Val::Percent(shield_percent);
         }
     }
 }
