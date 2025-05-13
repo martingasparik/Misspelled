@@ -9,9 +9,13 @@ mod player_animation;
 mod fireball;
 
 use bevy::prelude::*;
-use bevy::prelude::TextureAtlasLayout;
 use bevy::math::UVec2;
+use bevy::prelude::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
+
+// Import the debug‐renderer types from the `render` module:
+use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
+
 use orc::OrcPlugin;
 
 fn main() {
@@ -28,12 +32,17 @@ fn main() {
                         ..default()
                     }),
                     ..default()
-                })
+                }),
         )
 
         // ——— Rapier 2D physics ———
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physontentReference[oaicite:5]{index=5}
+        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay :contentReference[oaicite:6]{index=6}
+        .insert_resource(DebugRenderContext {
+            enabled: true,     // Turn on all colliders/hurtboxes :contentReference[oaicite:7]{index=7}
+            ..default()
+        })
+        .add_event::<CollisionEvent>()
 
         // ——— Orc enemy bundle ———
         .add_plugins(OrcPlugin)
@@ -42,6 +51,7 @@ fn main() {
         .add_event::<spell::SpellCastEvent>()
         .add_plugins(spell::StackSpellSystemPlugin)
         .add_plugins(fireball::FireballPlugin)
+
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
@@ -65,13 +75,13 @@ fn setup_game(
     // Setup camera
     camera::setup_camera(commands.reborrow());
 
-    // Create the texture atlas for character sprite
-    // Layout: 16x32 sprites, 9 columns, 10 rows
+    // Create the texture atlas
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = atlas_layouts.add(layout);
 
-    // Setup player entity
+    // Spawn the player
     player_code::setup_player(commands, texture, texture_atlas_layout);
-    
+
+    println!("Game setup complete");
 }
