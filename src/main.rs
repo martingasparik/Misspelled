@@ -8,12 +8,16 @@ mod player_animation;
 mod fireball;
 mod blink;
 mod hp_display;
+mod shield;
+mod spellbook;
 
 use bevy::prelude::*;
-use bevy::prelude::TextureAtlasLayout;
 use bevy::math::UVec2;
+use bevy::prelude::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
 
+use shield::ShieldPlugin;
 use orc::OrcPlugin;
 use hp_display::{HealthDisplayPlugin};
 
@@ -31,12 +35,17 @@ fn main() {
                         ..default()
                     }),
                     ..default()
-                })
+                }),
         )
 
         // ——— Rapier 2D physics ———
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physontentReference[oaicite:5]{index=5}
+        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay :contentReference[oaicite:6]{index=6}
+        .insert_resource(DebugRenderContext {
+            enabled: true,     // Turn on all colliders/hurtboxes :contentReference[oaicite:7]{index=7}
+            ..default()
+        })
+        .add_event::<CollisionEvent>()
 
         // ——— Health display system ———
         .add_plugins(HealthDisplayPlugin) // Add the health display plugin
@@ -49,6 +58,9 @@ fn main() {
         .add_plugins(spell::StackSpellSystemPlugin)
         .add_plugins(fireball::FireballPlugin)
         .add_plugins(blink::BlinkPlugin)
+        .add_plugins(ShieldPlugin)
+        .add_plugins(spellbook::SpellbookPlugin)
+        
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
@@ -75,6 +87,7 @@ fn setup_game(
     // Setup camera
     camera::setup_camera(commands.reborrow());
 
+
     // Load and spawn the library background
     let library = asset_server.load("library.png");
 
@@ -97,7 +110,8 @@ fn setup_game(
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = atlas_layouts.add(layout);
 
-    // Setup player entity
+    // Spawn the player
     player_code::setup_player(commands, texture, texture_atlas_layout);
-    
+
+    println!("Game setup complete");
 }

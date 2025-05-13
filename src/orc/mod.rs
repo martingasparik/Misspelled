@@ -2,7 +2,7 @@ mod assets;
 mod spawn;
 mod movement;
 mod sprite;
-mod collision;
+pub mod collision;
 
 pub use assets::OrcAssetPlugin;
 pub use spawn::OrcSpawnPlugin;
@@ -52,5 +52,7 @@ impl Plugin for OrcPlugin {
             .add_plugins(OrcMovementPlugin)
             .add_plugins(OrcSpritePlugin)
             .add_plugins(OrcCollisionPlugin);
+        
+        println!("OrcPlugin initialized with all sub-plugins");
     }
 }

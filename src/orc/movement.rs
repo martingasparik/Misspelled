@@ -4,8 +4,8 @@ use crate::player_code::Player;
 use crate::orc::{OrcEnemy, OrcState};
 
 const ORC_SPEED: f32 = 80.0;
-const ATTACK_RANGE: f32 = 80.0;
-const ATTACK_ANIM_DURATION: f32 = 0.5; // 5 frames at 10 FPS
+pub const ATTACK_RANGE: f32 = 80.0;
+pub const ATTACK_ANIM_DURATION: f32 = 0.5; // 5 frames at 10 FPS
 const ATTACK_COOLDOWN: f32 = 1.0;      // 1 second idle after attack
 
 pub struct OrcMovementPlugin;

@@ -37,14 +37,14 @@ impl Plugin for HealthDisplayPlugin {
 // Default implementation for MaxHealth resource
 impl Default for MaxHealth {
     fn default() -> Self {
-        MaxHealth(20.0) // Default max health, adjust as needed
+        MaxHealth(8.0) // Default max health, adjust as needed
     }
 }
 
 // Default implementation for MaxShield resource
 impl Default for MaxShield {
     fn default() -> Self {
-        MaxShield(20.0) // Default max shield, adjust as needed
+        MaxShield(8.0) // Default max shield, adjust as needed
     }
 }
 
