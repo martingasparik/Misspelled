@@ -10,6 +10,7 @@ mod fireball;
 mod blink;
 mod hp_display;
 mod shield;
+mod spellbook;
 
 use bevy::prelude::*;
 use bevy::math::UVec2;
@@ -59,6 +60,7 @@ fn main() {
         .add_plugins(fireball::FireballPlugin)
         .add_plugins(blink::BlinkPlugin)
         .add_plugins(ShieldPlugin)
+        .add_plugins(spellbook::SpellbookPlugin)
         
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)

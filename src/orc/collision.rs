@@ -133,6 +133,7 @@ fn update_attack_hitboxes(
 }
 
 fn orc_player_collision(
+    mut damage_events: EventWriter<DamageEvent>, 
     mut health_q: Query<&mut Health, With<Player>>,
     mut events: EventReader<CollisionEvent>,
     hitbox_q: Query<(&AttackHitbox, &GlobalTransform)>,
@@ -179,7 +180,7 @@ fn orc_player_collision(
         // We've already checked the sector with our collider shape,
         // so if there's a collision, the player is in the attack zone
         //health.health -= orc.damage;
-        damage_event.send(DamageEvent{amount: 5.0});
+        damage_events.send(DamageEvent{amount: 5.0});
         info!(
             "Player hit by Orc {:?}! New health: {:.1}",
             hitbox.owner, health.health
