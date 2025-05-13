@@ -23,10 +23,10 @@ fn orc_player_collision(
     for event in collision_events.read() {
         if let CollisionEvent::Started(e1, e2, _) = event {
             // Check if either entity is an orc
-            let is_orc_collision = 
+            let is_orc_collision =
                 orc_q.iter()
                      .any(|(_, entity)| entity == *e1 || entity == *e2);
-            
+
             // If it's an orc collision, damage the player
             if is_orc_collision {
                 health.health -= 5.0;
