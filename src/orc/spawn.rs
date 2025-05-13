@@ -5,6 +5,7 @@ use crate::animation::AnimationConfig;
 use crate::player_code::Health;
 use crate::orc::assets::OrcAssets;
 use crate::orc::OrcEnemy;
+use crate::orc::collision::HurtHitbox; // Import the HurtHitbox component
 
 pub struct OrcSpawnPlugin;
 impl Plugin for OrcSpawnPlugin {
@@ -38,7 +39,7 @@ fn spawn_orc(
     assets: &OrcAssets,
     spawn_pos: Vec3,
 ) {
-    commands.spawn((
+    let orc_entity = commands.spawn((
         // Visual components
         Sprite {
             image: assets.texture.clone(),
@@ -68,8 +69,16 @@ fn spawn_orc(
         // Animation components
         AnimationConfig::new(0, 7, 10), // Idle animation 
         
-        // Physics components
-        Collider::ball(5.0),
+        // Physics components for collision
+        Collider::capsule(  
+            Vec2::new(0.0, -5.0), // Center of the collider
+            Vec2::new(0.0, 5.0),
+            4.0,
+        ),
         ActiveEvents::COLLISION_EVENTS,
-    ));
+        HurtHitbox { owner: None },
+        
+        // Add name for debugging
+        Name::new(format!("Orc-{:?}", spawn_pos)),
+    )).id();
 }
