@@ -9,11 +9,13 @@ mod player_animation;
 mod fireball;
 mod blink;
 mod hp_display;
+mod shield;
 
 use bevy::prelude::*;
 use bevy::prelude::TextureAtlasLayout;
 use bevy::math::UVec2;
 use bevy_rapier2d::prelude::*;
+use shield::ShieldPlugin;
 
 use orc::OrcPlugin;
 use hp_display::{HealthDisplayPlugin};
@@ -50,6 +52,8 @@ fn main() {
         .add_plugins(spell::StackSpellSystemPlugin)
         .add_plugins(fireball::FireballPlugin)
         .add_plugins(blink::BlinkPlugin)
+        .add_plugins(ShieldPlugin)
+        
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
         .add_systems(
