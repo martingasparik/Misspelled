@@ -255,15 +255,13 @@ fn identify_spell(input: &str) -> SpellType {
     }
 }
 
-// Execute spells based on type - now properly connected to fireball.rs
 pub fn execute_spells(
     mut spell_events: EventReader<SpellCastEvent>,
 ) {
     for event in spell_events.read() {
         match event.spell_type {
             SpellType::Fireball => {
-                // The actual fireball spawning is handled in handle_fireball_casting 
-                // in fireball.rs, which responds to this event
+                // The actual fireball spawning is handled in handle_fireball_casting
                 println!("Casting Fireball spell!");
             },
             SpellType::Blink => {
@@ -271,7 +269,6 @@ pub fn execute_spells(
             },
             SpellType::Shield => {
                 println!("Casting Shield spell!");
-                // TODO: Implement shield spell logic
             },
             SpellType::Exit => {
                 println!("Casting Exit");

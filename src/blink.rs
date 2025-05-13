@@ -7,7 +7,7 @@ use crate::player_code::Player;
 use crate::player_movement::FacingDirection;
 use crate::animation::AnimationConfig;
 
-pub const BLINK_DISTANCE: f32 = 150.0;
+pub const BLINK_DISTANCE: f32 = 750.0;
 pub const BLINK_ANIMATION_FIRST_INDEX: usize = 0;
 pub const BLINK_ANIMATION_LAST_INDEX: usize = 5;
 pub const BLINK_ANIMATION_FPS: u8 = 15;
@@ -83,9 +83,8 @@ fn handle_blink_casting(
                     timer: Timer::from_seconds(BLINK_PHASE_DURATION, TimerMode::Once),
                     original_animation_config: prev_animation_config.cloned(),
                 };
-
-                // Load blink animation texture atlas
-                let blink_texture = asset_server.load("spells/10.png"); // Adjust path to your blink texture
+                
+                let blink_texture = asset_server.load("spells/10.png"); 
 
                 // Create a texture atlas layout for the 32x32 blink sprite
                 let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 3, 2, None, None);
