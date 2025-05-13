@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-
 use bevy::time::Time;
 use bevy::time::Real;
 
@@ -200,26 +199,3 @@ fn despawn_expired_fireballs(
         }
     }
 }
-/*
-// TODO targeting and collision
-pub fn execute_fireball(
-    entity: Entity,
-    commands: &mut Commands,
-    asset_server: &AssetServer,
-    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
-    player_query: &Query<(&Transform, &FacingDirection), With<Player>>,
-) {
-    // This is a utility function if you need to programmatically cast a fireball
-    // It could be called from other systems or events
-    if let Ok((player_transform, facing)) = player_query.get_single() {
-        let direction = if facing.facing_right {
-            Vec2::new(1.0, 0.0)
-        } else {
-            Vec2::new(-1.0, 0.0)
-        };
-
-        // Rest of fireball spawning logic...
-        println!("Programmatically casting fireball");
-    }
-}
-*/
