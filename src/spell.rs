@@ -54,11 +54,13 @@ pub struct SpellTextBackground;
 
 // Enum for spell types
 #[derive(Debug, Clone, Copy)]
+#[derive(PartialEq)]
 pub enum SpellType {
     Fireball,
     Blink,
     Shield,
     Exit,
+    Spellbook,
     Unknown,
 }
 
@@ -248,6 +250,7 @@ fn identify_spell(input: &str) -> SpellType {
         "blink" => SpellType::Blink,
         "shield" => SpellType::Shield,
         "exit" => SpellType::Exit,
+        "spellbook" => SpellType::Spellbook,
         _ => SpellType::Unknown,
     }
 }
@@ -274,6 +277,9 @@ pub fn execute_spells(
                 println!("Casting Exit");
                 exit(0);
             },
+            SpellType::Spellbook => {
+                println!("Casting Spellbook spell!");
+            }
             SpellType::Unknown => {
                 println!("Unknown spell: {}", event.spell_name);
             },
