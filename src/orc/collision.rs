@@ -12,8 +12,7 @@ pub struct AttackHitbox {
 
 #[derive(Component)]
 pub struct HurtHitbox {
-    #[allow(dead_code)]
-    pub owner: Option<Entity>, // Keeping this field as it might be used elsewhere
+    pub owner: Entity, // Keeping this field as it might be used elsewhere
 }
 
 pub struct OrcCollisionPlugin;
@@ -30,20 +29,20 @@ impl Plugin for OrcCollisionPlugin {
 
 fn spawn_hurt_hitboxes(
     mut commands: Commands,
-    new_orcs: Query<Entity, (Added<OrcEnemy>, Without<HurtHitbox>)>,
+    new_orcs: Query<Entity, Added<OrcEnemy>>,
 ) {
     for orc in new_orcs.iter() {
         commands.entity(orc).with_children(|parent| {
             parent.spawn((
-                Collider::capsule_y(10.0, 10.0),
+                Collider::capsule(  
+                    Vec2::new(0.0, -5.0), // Center of the collider
+                    Vec2::new(0.0, 5.0),
+                    4.0,
+                ),
                 ActiveEvents::COLLISION_EVENTS,
-                HurtHitbox { owner: Some(orc) },
-                Sprite {
-                    color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-                    custom_size: Some(Vec2::new(20.0 * 2.0, 20.0 * 2.0)),
-                    ..default()
-                },
+                HurtHitbox { owner: orc },
                 Transform::from_xyz(0.0, 0.0, 10.0), // Z-offset for visibility
+                
             ));
         });
     }
@@ -57,7 +56,7 @@ fn spawn_attack_hitboxes(
     for orc in new_orcs.iter() {
         // Creating a fan/sector shaped collider with points
         // We'll approximate a 90-degree sector with a convex polygon
-        let radius = 20.0;
+        let radius = 18.0;
         let mut points = vec![Vec2::ZERO]; // Center point
 
         // Add points to form a 90-degree sector

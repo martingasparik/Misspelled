@@ -1,13 +1,17 @@
 use bevy::prelude::*;
-
 use bevy::time::Time;
 use bevy::time::Real;
+use bevy_rapier2d::prelude::*;
 
 
 use crate::spell::{SpellType, SpellCastEvent};
 use crate::player_code::Player;
 use crate::player_movement::FacingDirection;
 use crate::animation::AnimationConfig;
+use crate::orc::{OrcEnemy, OrcState};
+use crate::orc::collision::HurtHitbox;
+use crate::shield::DamageEvent;
+use crate::player_code::Health;
 
 pub const FIREBALL_SPEED: f32 = 200.0;
 pub const FIREBALL_LIFETIME: f32 = 5.0;
@@ -16,9 +20,11 @@ pub const FIREBALL_FIRST_INDEX: usize = 0;
 pub const FIREBALL_LAST_INDEX: usize = 11;
 pub const FIREBALL_FPS: u8 = 12;
 
-// Component to mark entities as enemies
+//Death timer
 #[derive(Component)]
-pub struct Enemy;
+pub struct DeathTimer {
+    pub timer: Timer,
+}
 
 // Component for fireball spell entities
 #[derive(Component)]
@@ -72,6 +78,7 @@ impl Plugin for FireballPlugin {
             update_fireballs,
             handle_fireball_collisions,
             despawn_expired_fireballs,
+            handle_death_timers,
         ));
     }
 }
@@ -112,7 +119,7 @@ fn handle_fireball_casting(
                 );
 
                 // Spawn fireball entity
-                commands.spawn((
+                let fireball_entity = commands.spawn((
                     Sprite {
                         image: fireball_texture.clone(),
                         texture_atlas: Some(TextureAtlas {
@@ -126,11 +133,16 @@ fn handle_fireball_casting(
                         .with_scale(Vec3::splat(2.0)), // Size of the fireball
                     Fireball::new(direction, FIREBALL_DAMAGE),
                     fireball_animation,
+                    
+                    // Add physics components for collision detection
+                    Collider::ball(8.0),
+                    Sensor, // Make it a sensor so it doesn't push things
+                    ActiveEvents::COLLISION_EVENTS,
+                    
                     Name::new("Fireball"),
-                ));
-
+                )).id();
                 // Print debug info
-                println!("Fireball cast in direction: {:?}", direction);
+                info!("Fireball cast in direction: {:?}", direction);
             }
         }
     }
@@ -150,37 +162,65 @@ fn update_fireballs(
     }
 }
 
-
-
 // System to handle fireball collision with enemies
 fn handle_fireball_collisions(
     mut commands: Commands,
-    mut fireball_query: Query<(Entity, &Transform, &mut Fireball)>,
-    enemy_query: Query<(Entity, &Transform), With<Enemy>>,
+    mut collision_events: EventReader<CollisionEvent>,
+    mut fireball_query: Query<(Entity, &mut Fireball)>,
+    hurtbox_query: Query<&HurtHitbox>,
+    mut orc_query: Query<(&mut OrcEnemy, &mut Health)>,
 ) {
-    for (fireball_entity, fireball_transform, mut fireball) in fireball_query.iter_mut() {
-        if fireball.is_disabled() {
-            continue;
-        }
-
-        // Check collisions with enemies
-        for (enemy_entity, enemy_transform) in enemy_query.iter() {
-            // Simple circle collision detection
-            let distance = fireball_transform.translation.distance(enemy_transform.translation);
-
-            // Assuming the combined radius of fireball and enemy is 25.0 units
-            if distance < 25.0 {
-                // Apply damage to enemy (you'd typically modify a Health component)
-                println!("Enemy hit for {} damage!", fireball.damage);
-
-
-                fireball.disable();
-                
+    for event in collision_events.read() {
+        if let CollisionEvent::Started(entity1, entity2, _flags) = event {
+            // Check if one entity is a fireball
+            let (fireball_entity, other_entity) = 
+                if fireball_query.contains(*entity1) { (*entity1, *entity2) }
+                else if fireball_query.contains(*entity2) { (*entity2, *entity1) }
+                else { continue; }; // Neither entity is a fireball
+            
+            // Get the fireball component
+            if let Ok((_, mut fireball)) = fireball_query.get_mut(fireball_entity) {
+                // Skip if fireball is already disabled
                 if fireball.is_disabled() {
-                    commands.entity(fireball_entity).despawn();
+                    continue;
                 }
-                if !fireball.piercing {
-                    break;
+                
+                // Check if the other entity has a hurtbox component
+                if let Ok(hurtbox) = hurtbox_query.get(other_entity) {
+                    let orc_entity = hurtbox.owner;
+                    
+                    // Get the orc component and health
+                    if let Ok((mut orc, mut health)) = orc_query.get_mut(orc_entity) {
+                        // Apply damage to health
+                        health.health -= fireball.damage;
+                        
+                        info!("Orc hit for {} damage! Remaining health: {}", 
+                              fireball.damage, health.health);
+                              
+                        // Set orc to hurt state if still alive
+                        if health.health <= 0.0 {
+                            orc.state = OrcState::Dying;
+                            info!("Orc defeated! Adding death timer");
+                            
+                            commands.entity(orc_entity).insert(DeathTimer {
+                                timer: Timer::from_seconds(0.5, TimerMode::Once),
+                            });
+
+                            commands.entity(orc_entity).insert(LockedAxes::TRANSLATION_LOCKED_X | LockedAxes::TRANSLATION_LOCKED_Y);
+                        } else {
+                            // Only transition to hurt state if not dying
+                            orc.state = OrcState::Hurt;
+                        }
+                        
+                        // Disable the fireball
+                        fireball.disable();
+                        
+                        // Despawn if non-piercing
+                        if fireball.is_disabled() {
+                            commands.entity(fireball_entity).despawn_recursive();
+                            info!("Despawned fireball after hitting orc");
+                        }
+                    }
                 }
             }
         }
@@ -200,26 +240,18 @@ fn despawn_expired_fireballs(
         }
     }
 }
-/*
-// TODO targeting and collision
-pub fn execute_fireball(
-    entity: Entity,
-    commands: &mut Commands,
-    asset_server: &AssetServer,
-    texture_atlas_layouts: &mut Assets<TextureAtlasLayout>,
-    player_query: &Query<(&Transform, &FacingDirection), With<Player>>,
-) {
-    // This is a utility function if you need to programmatically cast a fireball
-    // It could be called from other systems or events
-    if let Ok((player_transform, facing)) = player_query.get_single() {
-        let direction = if facing.facing_right {
-            Vec2::new(1.0, 0.0)
-        } else {
-            Vec2::new(-1.0, 0.0)
-        };
 
-        // Rest of fireball spawning logic...
-        println!("Programmatically casting fireball");
+fn handle_death_timers(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut DeathTimer)>,
+    time: Res<Time>,
+) {
+    for (entity, mut timer) in query.iter_mut() {
+        timer.timer.tick(time.delta());
+        
+        if timer.timer.finished() {
+            info!("Death timer finished, despawning entity {:?}", entity);
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
-*/

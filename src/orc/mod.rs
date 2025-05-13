@@ -26,7 +26,6 @@ pub struct OrcEnemy {
     pub health: f32,
     pub damage: f32,
     pub state: OrcState,
-    pub attack_cooldown: f32,
     pub attack_cooldown_timer: f32,
 }
 
@@ -36,7 +35,6 @@ impl OrcEnemy {
             health,
             damage,
             state: OrcState::Idle,
-            attack_cooldown: 0.0,
             attack_cooldown_timer: 1.0,
         }
     }

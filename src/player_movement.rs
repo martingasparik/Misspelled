@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use crate::player_code::Player;
 
 // Player movement speed factor
-const PLAYER_SPEED: f32 = 500.0;
+const PLAYER_SPEED: f32 = 275.0;
 
 #[derive(Component, Default)]
 pub struct FacingDirection {

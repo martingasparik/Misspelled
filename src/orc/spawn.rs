@@ -5,7 +5,6 @@ use crate::animation::AnimationConfig;
 use crate::player_code::Health;
 use crate::orc::assets::OrcAssets;
 use crate::orc::OrcEnemy;
-use crate::orc::collision::HurtHitbox; // Import the HurtHitbox component
 
 pub struct OrcSpawnPlugin;
 impl Plugin for OrcSpawnPlugin {
@@ -63,8 +62,8 @@ fn spawn_orc(
         },
 
         // Game logic components
-        OrcEnemy::new(20.0, 5.0), // This now includes attack timers
-        Health::new(20.0),
+        OrcEnemy::new(10.0, 1.0), // This now includes attack timers
+        Health::new(10.0),
         
         // Animation components
         AnimationConfig::new(0, 7, 10), // Idle animation 
@@ -76,9 +75,13 @@ fn spawn_orc(
             4.0,
         ),
         ActiveEvents::COLLISION_EVENTS,
-        HurtHitbox { owner: None },
-        
-        // Add name for debugging
+        CollisionGroups::new(
+            Group::GROUP_1, // Body is in group 1
+            Group::GROUP_2, // Can collide with group 2 (environment)
+        ),
+
         Name::new(format!("Orc-{:?}", spawn_pos)),
     )).id();
+    
+    info!("Spawned orc {:?} at {:?}", orc_entity, spawn_pos);
 }
