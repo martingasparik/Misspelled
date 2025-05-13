@@ -1,3 +1,9 @@
+use bevy::prelude::*;
+use bevy::math::UVec2;
+use bevy::prelude::TextureAtlasLayout;
+use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
+
 mod animation;
 mod camera;
 mod spell;
@@ -10,12 +16,7 @@ mod blink;
 mod hp_display;
 mod shield;
 mod spellbook;
-
-use bevy::prelude::*;
-use bevy::math::UVec2;
-use bevy::prelude::TextureAtlasLayout;
-use bevy_rapier2d::prelude::*;
-use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
+mod world;
 
 use shield::ShieldPlugin;
 use orc::OrcPlugin;
@@ -76,8 +77,7 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
-struct LibraryBackground;
+
 
 fn setup_game(
     mut commands: Commands,
@@ -90,7 +90,9 @@ fn setup_game(
 
     // Load and spawn the library background
     let library = asset_server.load("library.png");
-
+    world::setup_world(commands.reborrow(), library);
+    
+/*
     commands.spawn((
         Sprite {
             image: library,
@@ -103,7 +105,7 @@ fn setup_game(
         },
         LibraryBackground,
     ));
-
+*/
     // Create the texture atlas for character sprite
     // Layout: 16x32 sprites, 9 columns, 10 rows
     let texture = asset_server.load("characters_atlas.png");
