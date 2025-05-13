@@ -4,9 +4,9 @@ use crate::player_code::Player;
 use crate::orc::{OrcEnemy, OrcState};
 
 const ORC_SPEED: f32 = 80.0;
-pub const ATTACK_RANGE: f32 = 80.0;
+pub const ATTACK_RANGE: f32 = 100.0;
 pub const ATTACK_ANIM_DURATION: f32 = 0.5; // 5 frames at 10 FPS
-const ATTACK_COOLDOWN: f32 = 1.0;      // 1 second idle after attack
+const ATTACK_COOLDOWN: f32 = 0.8;      // 1 second idle after attack
 
 pub struct OrcMovementPlugin;
 impl Plugin for OrcMovementPlugin {
@@ -43,6 +43,11 @@ fn orc_movement_system(
     let max_timer = ATTACK_ANIM_DURATION + ATTACK_COOLDOWN;
 
     for (transform, mut vel, mut orc, mut sprite) in query.iter_mut() {
+        if orc.state == OrcState::Dying {
+                vel.linvel = Vec2::ZERO;
+                continue;
+        }
+
         let orc_pos = transform.translation.truncate();
         let to_player = player_pos - orc_pos;
         let dist = to_player.length();

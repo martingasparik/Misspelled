@@ -12,8 +12,7 @@ pub struct AttackHitbox {
 
 #[derive(Component)]
 pub struct HurtHitbox {
-    #[allow(dead_code)]
-    pub owner: Option<Entity>, // Keeping this field as it might be used elsewhere
+    pub owner: Entity, // Keeping this field as it might be used elsewhere
 }
 
 pub struct OrcCollisionPlugin;
@@ -30,20 +29,20 @@ impl Plugin for OrcCollisionPlugin {
 
 fn spawn_hurt_hitboxes(
     mut commands: Commands,
-    new_orcs: Query<Entity, (Added<OrcEnemy>, Without<HurtHitbox>)>,
+    new_orcs: Query<Entity, Added<OrcEnemy>>,
 ) {
     for orc in new_orcs.iter() {
         commands.entity(orc).with_children(|parent| {
             parent.spawn((
-                Collider::capsule_y(10.0, 10.0),
+                Collider::capsule(  
+                    Vec2::new(0.0, -5.0), // Center of the collider
+                    Vec2::new(0.0, 5.0),
+                    4.0,
+                ),
                 ActiveEvents::COLLISION_EVENTS,
-                HurtHitbox { owner: Some(orc) },
-                Sprite {
-                    color: Color::srgba(1.0, 0.0, 0.0, 0.2),
-                    custom_size: Some(Vec2::new(20.0 * 2.0, 20.0 * 2.0)),
-                    ..default()
-                },
+                HurtHitbox { owner: orc },
                 Transform::from_xyz(0.0, 0.0, 10.0), // Z-offset for visibility
+                
             ));
         });
     }
@@ -57,20 +56,20 @@ fn spawn_attack_hitboxes(
     for orc in new_orcs.iter() {
         // Creating a fan/sector shaped collider with points
         // We'll approximate a 90-degree sector with a convex polygon
-        let radius = 20.0;
+        let radius = 18.0;
         let mut points = vec![Vec2::ZERO]; // Center point
-        
+
         // Add points to form a 90-degree sector
         let segments = 8; // Number of segments to approximate the arc
         let half_angle = std::f32::consts::FRAC_PI_4; // 45 degrees (half of 90)
-        
+
         for i in 0..=segments {
             let angle = -half_angle + (2.0 * half_angle * i as f32 / segments as f32);
             let x = radius * angle.cos();
             let y = radius * angle.sin();
             points.push(Vec2::new(x, y));
         }
-        
+
         commands.entity(orc).with_children(|parent| {
             parent.spawn((
                 Name::new(format!("AttackHitbox-{orc:?}")),
@@ -96,10 +95,10 @@ fn update_attack_hitboxes(
 ) {
     // Get player position if available
     let player_pos = param_set.p2().get_single().ok().map(|t| t.translation);
-    
+
     // Collect necessary data from first query
     let mut updates = Vec::new();
-    
+
     {
         let orc_query = param_set.p0();
         for (orc_transform, children, _orc) in orc_query.iter() {
@@ -111,14 +110,14 @@ fn update_attack_hitboxes(
                 // Default to facing the direction the orc is scaled
                 if orc_transform.scale.x > 0.0 { 0.0 } else { std::f32::consts::PI }
             };
-            
+
             // Store the children and rotation for later use
             for &child in children {
                 updates.push((child, facing_angle));
             }
         }
     }
-    
+
     {
         let mut hitbox_query = param_set.p1();
         for (child, angle) in updates {
@@ -134,7 +133,7 @@ fn update_attack_hitboxes(
 }
 
 fn orc_player_collision(
-    mut damage_events: EventWriter<DamageEvent>, 
+    mut damage_events: EventWriter<DamageEvent>,
     mut health_q: Query<&mut Health, With<Player>>,
     mut events: EventReader<CollisionEvent>,
     hitbox_q: Query<(&AttackHitbox, &GlobalTransform)>,
@@ -156,7 +155,7 @@ fn orc_player_collision(
             CollisionEvent::Started(a, b, _) => (*a, *b),
             _ => continue,
         };
-        
+
         // Identify which is hitbox & which is player
         let (hitbox_entity, _player_entity) = if a == player {
             (b, a)

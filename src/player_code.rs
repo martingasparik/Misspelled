@@ -2,9 +2,14 @@ use bevy::prelude::{default, Commands, Component, Sprite, TextureAtlas, TextureA
 use bevy::asset::Handle;
 use bevy::image::Image;
 use bevy::math::Vec3;
+use bevy::math::Vec2;
+use bevy_rapier2d::prelude::Collider;
 use crate::animation::{AnimationConfig, SpriteState};
 use crate::player_animation::{FIRST_IDLE, FPS_IDLE, LAST_IDLE};
 use crate::player_movement::{FacingDirection, MovementState};
+//use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
+use crate::orc::collision::HurtHitbox;
 
 #[derive(Component)]
 pub struct Player;
@@ -40,6 +45,16 @@ pub fn setup_player(
 
     // Spawn the player with all required components
     commands.spawn((
+        RigidBody::Dynamic,
+        Velocity::default(),
+        Collider::capsule(
+            Vec2::new(1.0, 0.0), 
+            Vec2::new(1.0, -6.0),
+            4.0,
+        ),
+        ActiveEvents::COLLISION_EVENTS,
+        LockedAxes::ROTATION_LOCKED,      
+        
         // Visual components
         Sprite {
             image: texture,
@@ -61,3 +76,4 @@ pub fn setup_player(
         idle_animation_config,
     ));
 }
+
