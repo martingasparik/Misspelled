@@ -16,7 +16,7 @@ use bevy::math::UVec2;
 use bevy_rapier2d::prelude::*;
 
 use orc::OrcPlugin;
-use hp_display::HealthDisplayPlugin;
+use hp_display::{HealthDisplayPlugin};
 
 fn main() {
     App::new()
