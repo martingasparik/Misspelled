@@ -26,7 +26,7 @@ fn handle_shield_spell(
                 // and we don't already have max shields
                 if shield.shield < health.health {
                     // Add one shield point
-                    shield.shield = (shield.shield + 1.0).min(health.health);
+                    shield.shield = (shield.shield + 2.0).min(health.health);
 
                     // Emit shield activation event
                     event_writer.send(ShieldEvent::Activated);
@@ -72,12 +72,7 @@ fn process_damage(
                 println!("No shield! Taking {} damage directly to health. Health now: {}", damage_amount, health.health);
             }
 
-            // Ensure health doesn't go below zero
-            health.health = health.health.max(0.0);
 
-            // Ensure shield doesn't exceed health - this is crucial
-            // If health is reduced, we need to cap shields at current health
-            shield.shield = shield.shield.min(health.health);
         }
     }
 }
