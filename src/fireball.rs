@@ -10,7 +10,6 @@ use crate::player_movement::FacingDirection;
 use crate::animation::AnimationConfig;
 use crate::orc::{OrcEnemy, OrcState};
 use crate::orc::collision::HurtHitbox;
-use crate::shield::DamageEvent;
 use crate::player_code::Health;
 
 pub const FIREBALL_SPEED: f32 = 200.0;
@@ -24,6 +23,16 @@ pub const FIREBALL_FPS: u8 = 12;
 #[derive(Component)]
 pub struct DeathTimer {
     pub timer: Timer,
+}
+
+#[derive(Component)]
+struct FireballHit;
+
+// Add this component to track the fading state
+#[derive(Component)]
+pub struct DeathFade {
+    pub fade_timer: Timer,
+    pub initial_alpha: f32,
 }
 
 // Component for fireball spell entities
@@ -79,6 +88,7 @@ impl Plugin for FireballPlugin {
             handle_fireball_collisions,
             despawn_expired_fireballs,
             handle_death_timers,
+            handle_death_fade,
         ));
     }
 }
@@ -141,8 +151,6 @@ fn handle_fireball_casting(
                     
                     Name::new("Fireball"),
                 )).id();
-                // Print debug info
-                info!("Fireball cast in direction: {:?}", direction);
             }
         }
     }
@@ -166,61 +174,52 @@ fn update_fireballs(
 fn handle_fireball_collisions(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
-    mut fireball_query: Query<(Entity, &mut Fireball)>,
+    // skip any fireball that's already been hit
+    mut fireball_query: Query<(Entity, &mut Fireball), Without<FireballHit>>,
     hurtbox_query: Query<&HurtHitbox>,
     mut orc_query: Query<(&mut OrcEnemy, &mut Health)>,
 ) {
+    // iterate all new collision events
     for event in collision_events.read() {
-        if let CollisionEvent::Started(entity1, entity2, _flags) = event {
-            // Check if one entity is a fireball
-            let (fireball_entity, other_entity) = 
-                if fireball_query.contains(*entity1) { (*entity1, *entity2) }
-                else if fireball_query.contains(*entity2) { (*entity2, *entity1) }
-                else { continue; }; // Neither entity is a fireball
-            
-            // Get the fireball component
-            if let Ok((_, mut fireball)) = fireball_query.get_mut(fireball_entity) {
-                // Skip if fireball is already disabled
+        // destructure the reference so we get owned Entities
+        if let &CollisionEvent::Started(entity1, entity2, _flags) = event {
+            // figure out which one is the fireball
+            let (fb_ent, other_ent) = if fireball_query.contains(entity1) {
+                (entity1, entity2)
+            } else if fireball_query.contains(entity2) {
+                (entity2, entity1)
+            } else {
+                continue;
+            };
+
+            // pull out the fireball component
+            if let Ok((_, mut fireball)) = fireball_query.get_mut(fb_ent) {
+                // skip if it was already disabled/hit
                 if fireball.is_disabled() {
                     continue;
                 }
-                
-                // Check if the other entity has a hurtbox component
-                if let Ok(hurtbox) = hurtbox_query.get(other_entity) {
-                    let orc_entity = hurtbox.owner;
-                    
-                    // Get the orc component and health
-                    if let Ok((mut orc, mut health)) = orc_query.get_mut(orc_entity) {
-                        // Apply damage to health
+
+                // only proceed if the other entity really is an orc hurtbox
+                if let Ok(hb) = hurtbox_query.get(other_ent) {
+                    let orc_ent = hb.owner;
+
+                    // apply damage or start death on the orc
+                    if let Ok((mut orc, mut health)) = orc_query.get_mut(orc_ent) {
                         health.health -= fireball.damage;
-                        
-                        info!("Orc hit for {} damage! Remaining health: {}", 
-                              fireball.damage, health.health);
-                              
-                        // Set orc to hurt state if still alive
                         if health.health <= 0.0 {
                             orc.state = OrcState::Dying;
-                            info!("Orc defeated! Adding death timer");
-                            
-                            commands.entity(orc_entity).insert(DeathTimer {
-                                timer: Timer::from_seconds(0.5, TimerMode::Once),
-                            });
-
-                            commands.entity(orc_entity).insert(LockedAxes::TRANSLATION_LOCKED_X | LockedAxes::TRANSLATION_LOCKED_Y);
-                        } else {
-                            // Only transition to hurt state if not dying
-                            orc.state = OrcState::Hurt;
-                        }
-                        
-                        // Disable the fireball
-                        fireball.disable();
-                        
-                        // Despawn if non-piercing
-                        if fireball.is_disabled() {
-                            commands.entity(fireball_entity).despawn_recursive();
-                            info!("Despawned fireball after hitting orc");
+                            commands.entity(orc_ent)
+                                .insert(LockedAxes::TRANSLATION_LOCKED_X | LockedAxes::TRANSLATION_LOCKED_Y)
+                                .insert(DeathTimer {
+                                    timer: Timer::from_seconds(1.5, TimerMode::Once),
+                                });
                         }
                     }
+
+                    // tag & despawn the fireball exactly once
+                    commands.entity(fb_ent)
+                        .insert(FireballHit)
+                        .despawn();
                 }
             }
         }
@@ -241,17 +240,56 @@ fn despawn_expired_fireballs(
     }
 }
 
+// Handle death timers for dead entities
 fn handle_death_timers(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut DeathTimer)>,
+    mut query: Query<(Entity, &mut DeathTimer, Option<&Sprite>)>,
+    death_fade_query: Query<&DeathFade>,
     time: Res<Time>,
 ) {
-    for (entity, mut timer) in query.iter_mut() {
+    for (entity, mut timer, _) in query.iter_mut() {
         timer.timer.tick(time.delta());
         
+        // Only despawn when the sprite has fully faded out (handled by DeathFade)
+        // This timer just ensures the entity will eventually be cleaned up
         if timer.timer.finished() {
-            info!("Death timer finished, despawning entity {:?}", entity);
+            // Check if the entity already has a DeathFade component
+            let has_death_fade = death_fade_query.get(entity).is_ok();
+            
+            if !has_death_fade {
+                info!("Death timer finished, entity will be despawned after fade completes");
+                // Add DeathFade component to start fading if it doesn't exist yet
+                commands.entity(entity).insert(DeathFade {
+                    fade_timer: Timer::from_seconds(0.0, TimerMode::Once), // Start fading immediately
+                    initial_alpha: 1.0,
+                });
+            }
+        }
+    }
+}
+
+// Handle fading out of dying entities
+fn handle_death_fade(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Sprite, &mut DeathFade)>,
+) {
+    for (entity, mut sprite, mut fade) in query.iter_mut() {
+        fade.fade_timer.tick(time.delta());
+
+        let elapsed  = fade.fade_timer.elapsed().as_secs_f32();
+        let total    = fade.fade_timer.duration().as_secs_f32();
+        let progress = (elapsed / total).clamp(0.0, 1.0);
+
+        let new_alpha = fade.initial_alpha * (1.0 - progress);
+
+        // ← here’s the only line you need to change:
+        sprite.color.set_alpha(new_alpha);
+        //  (or: sprite.color = sprite.color.with_alpha(new_alpha);)
+
+        if fade.fade_timer.finished() {
             commands.entity(entity).despawn_recursive();
         }
     }
 }
+

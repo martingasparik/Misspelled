@@ -145,7 +145,7 @@ fn orc_player_collision(
         Ok(e) => e,
         Err(_) => return,
     };
-    let mut health = match health_q.get_single_mut() {
+    let health = match health_q.get_single_mut() {
         Ok(h) => h,
         Err(_) => return,
     };
