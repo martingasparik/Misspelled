@@ -2,8 +2,9 @@ use bevy::prelude::*;
 use crate::orc::OrcEnemy;
 use crate::orc::OrcState;
 use crate::animation::AnimationConfig;
-use crate::fireball::DeathFade;
+use crate::fireball::{DeathFade, DeathTimer};
 use crate::orc::collision::HurtHitbox;
+
 
 pub struct OrcSpritePlugin;
 impl Plugin for OrcSpritePlugin {
@@ -14,7 +15,7 @@ impl Plugin for OrcSpritePlugin {
 }
 
 fn update_orc_animation(
-    mut query: Query<(&mut AnimationConfig, &mut Sprite, &OrcEnemy), Without<DeathFade>>,
+    mut query: Query<(&mut AnimationConfig, &mut Sprite, &OrcEnemy), (Without<DeathTimer>, Without<DeathFade>)>,
 ) {
     for (mut config, mut sprite, orc) in query.iter_mut() {
         // Update animation indices based on state
