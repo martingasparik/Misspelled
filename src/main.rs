@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::math::IVec2;
 use bevy::sprite::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
@@ -13,7 +12,7 @@ mod player_code;
 mod player_animation;
 mod fireball;
 mod blink;
-mod hp_display;
+mod ui_hp_display;
 mod shield;
 mod spellbook;
 mod world;
@@ -21,8 +20,8 @@ mod audio;
 
 use shield::ShieldPlugin;
 use orc::OrcPlugin;
-use hp_display::{HealthDisplayPlugin};
-use audio::AudioPlugin; // Import the AudioPlugin
+use ui_hp_display::{HealthDisplayPlugin};
+use audio::AudioPlugin;
 
 fn main() {
     App::new()
@@ -103,7 +102,6 @@ fn setup_game(
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = atlas_layouts.add(layout);
-
     // Spawn the player
     player_code::setup_player(commands, texture, texture_atlas_layout);
 

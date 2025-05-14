@@ -18,23 +18,40 @@ struct ShieldBarFill;
 #[derive(Component)]
 struct HeartContainer;
 
-// Resource to store the maximum health and shield values for scaling
 #[derive(Resource)]
 struct MaxHealth(f32);
+
+#[derive(Resource)]
+struct MaxShield(f32);
 
 
 impl Plugin for HealthDisplayPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<MaxHealth>()
-            .add_systems(Startup, setup_health_display)
+        app.add_systems(Startup, (
+            setup_health_display,
+            setup_max_values.after(setup_health_display)
+        ))
             .add_systems(Update, (update_health_display, update_shield_display));
     }
 }
 
-// Default implementation for MaxHealth resource
-impl Default for MaxHealth {
-    fn default() -> Self {
-        MaxHealth(10.0) // Default max health, adjust as needed
+
+// System to initialize max values based on the player's initial health/shield
+fn setup_max_values(
+    player_query: Query<(&Health, Option<&Shield>), With<Player>>,
+    mut commands: Commands,
+) {
+    if let Ok((health, shield_opt)) = player_query.get_single() {
+        // Set max health to player's initial health
+        commands.insert_resource(MaxHealth(health.health));
+
+        // Set max shield based on player's shield, or 0 if not present
+        let max_shield = shield_opt.map_or(0.0, |shield| shield.shield);
+        commands.insert_resource(MaxShield(max_shield));
+    } else {
+        // Fallback defaults if player isn't found
+        commands.insert_resource(MaxHealth(20.0));
+        commands.insert_resource(MaxShield(20.0));
     }
 }
 
@@ -66,18 +83,18 @@ fn setup_health_display(
                         position_type: PositionType::Absolute,
                         left: Val::Px(20.0),
                         top: Val::Px(20.0),
-                        width: Val::Px(health_bar_width),
+                        width: Val::Px(health_bar_width-(15. + 19.0*1.5)), 
                         height: Val::Px(health_bar_height),
                         ..default()
                     },
                     HealthBar,
                 ))
                 .with_children(|parent| {
-                    // Health bar fill (red rectangle) - positioned absolutely
+                    // Health bar fill (red rectangle)
                     parent.spawn((
                         Node {
                             position_type: PositionType::Absolute,
-                            left: Val::Px(0.0),
+                            left: Val::Px(15.0),
                             top: Val::Px(0.0),
                             width: Val::Percent(100.0), // Start at 100% width
                             height: Val::Percent(100.0),
@@ -94,7 +111,7 @@ fn setup_health_display(
                     parent.spawn((
                         Node {
                             position_type: PositionType::Absolute,
-                            left: Val::Px(0.0),
+                            left: Val::Px(15.0),
                             top: Val::Px(0.0),
                             width: Val::Percent(0.0), // Start at 0% width
                             height: Val::Percent(100.0),
