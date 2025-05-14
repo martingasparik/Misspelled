@@ -56,7 +56,7 @@ fn spawn_attack_hitboxes(
     for orc in new_orcs.iter() {
         // Creating a fan/sector shaped collider with points
         // We'll approximate a 90-degree sector with a convex polygon
-        let radius = 18.0;
+        let radius = 15.0;
         let mut points = vec![Vec2::ZERO]; // Center point
 
         // Add points to form a 90-degree sector

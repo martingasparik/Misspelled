@@ -45,7 +45,6 @@ fn main() {
 
         // ——— Rapier 2D physics ———
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physics
-        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay
         .insert_resource(DebugRenderContext {
             enabled: true,     // Turn on all colliders/hurtboxes
             ..default()
