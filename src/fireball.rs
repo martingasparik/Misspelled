@@ -237,11 +237,9 @@ fn handle_fireball_collisions(
                                 .insert(CollisionGroups::new(
                                     Group::NONE, // Remove from all collision groups
                                     Group::NONE  // Don't collide with anything
-                                ))
-                                .insert(DeathTimer {
-                                    timer: Timer::from_seconds(1.5, TimerMode::Once),
-                                });
-                         info!("Orc dying, disabling all collisions!");
+                                ));
+                            info!("Orc dying, disabling all collisions!");
+                            
                             // immediately tear down all hurtboxes
                             for (hb_ent, hurtbox) in hurtbox_query.iter() {
                                 if hurtbox.owner == orc_ent {
