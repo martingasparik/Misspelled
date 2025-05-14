@@ -22,6 +22,9 @@ use shield::ShieldPlugin;
 use orc::OrcPlugin;
 use ui_hp_display::{HealthDisplayPlugin};
 use audio::AudioPlugin;
+use hp_display::{HealthDisplayPlugin};
+use audio::AudioPlugin; 
+use crate::player_code::{PlayerPhysicsPlugin, PlayerHealthPlugin};
 
 fn main() {
     App::new()
@@ -48,6 +51,8 @@ fn main() {
             ..default()
         })
         .add_event::<CollisionEvent>()
+        //.add_plugins(PlayerPhysicsPlugin)
+        .add_plugins(PlayerHealthPlugin)
 
         // ——— Audio system ———
         .add_plugins(AudioPlugin) // Add the audio plugin

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use std::time::Duration;
+use crate::fireball::DeathFade;
 
 #[derive(Component, PartialEq, Clone, Copy, Debug)]
 pub enum SpriteState {
@@ -38,7 +39,7 @@ impl AnimationConfig {
 // Handle animations
 pub fn execute_animations(
     time: Res<Time>,
-    mut query: Query<(&mut AnimationConfig, &mut Sprite)>
+    mut query: Query<(&mut AnimationConfig, &mut Sprite), Without<DeathFade>>
 ) {
     for (mut config, mut sprite) in &mut query {
         // Tick the animation timer

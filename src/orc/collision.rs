@@ -145,7 +145,7 @@ fn orc_player_collision(
         Ok(e) => e,
         Err(_) => return,
     };
-    let mut health = match health_q.get_single_mut() {
+    let health = match health_q.get_single_mut() {
         Ok(h) => h,
         Err(_) => return,
     };
@@ -180,7 +180,7 @@ fn orc_player_collision(
         // We've already checked the sector with our collider shape,
         // so if there's a collision, the player is in the attack zone
         //health.health -= orc.damage;
-        damage_events.send(DamageEvent{amount: 5.0});
+        damage_events.send(DamageEvent{amount: 1.0});
         info!(
             "Player hit by Orc {:?}! New health: {:.1}",
             hitbox.owner, health.health
