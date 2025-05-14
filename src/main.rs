@@ -3,28 +3,28 @@ use bevy::sprite::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
 
+mod audio;
 mod animation;
 mod camera;
-mod spell;
-mod orc;
+mod world;
+mod ui_hp_display;
+mod ui_orc_counter;
 mod player_movement;
 mod player_code;
 mod player_animation;
-mod fireball;
-mod blink;
-mod ui_hp_display;
-mod shield;
+mod orc;
+mod spell;
 mod spellbook;
-mod world;
-mod audio;
+mod blink;
+mod fireball;
+mod shield;
 
-use shield::ShieldPlugin;
-use orc::OrcPlugin;
-use ui_hp_display::{HealthDisplayPlugin};
 use audio::AudioPlugin;
-use hp_display::{HealthDisplayPlugin};
-use audio::AudioPlugin; 
-use crate::player_code::{PlayerPhysicsPlugin, PlayerHealthPlugin};
+use ui_hp_display::{HealthDisplayPlugin};
+use ui_orc_counter::OrcDeathCounterPlugin;
+use crate::player_code::{ PlayerHealthPlugin};
+use orc::OrcPlugin;
+use shield::ShieldPlugin;
 
 fn main() {
     App::new()
@@ -35,7 +35,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Misspelled".into(),
-                        resolution: (1600.0, 900.0).into(),
+                        resolution: (1200.0, 900.0).into(),
                         resizable: true,
                         ..default()
                     }),
@@ -70,6 +70,8 @@ fn main() {
         .add_plugins(blink::BlinkPlugin)
         .add_plugins(ShieldPlugin)
         .add_plugins(spellbook::SpellbookPlugin)
+
+        .add_plugins(OrcDeathCounterPlugin)
 
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
