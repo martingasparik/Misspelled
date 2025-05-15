@@ -1,29 +1,30 @@
 use bevy::prelude::*;
-use bevy::math::IVec2;
 use bevy::sprite::TextureAtlasLayout;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::render::{RapierDebugRenderPlugin, DebugRenderContext};
 
+mod audio;
 mod animation;
 mod camera;
-mod spell;
-mod orc;
+mod world;
+mod ui_hp_display;
+mod ui_orc_counter;
 mod player_movement;
 mod player_code;
 mod player_animation;
-mod fireball;
-mod blink;
-mod hp_display;
-mod shield;
+mod orc;
+mod spell;
 mod spellbook;
-mod world;
-mod audio;
+mod blink;
+mod fireball;
+mod shield;
 
-use shield::ShieldPlugin;
+use audio::AudioPlugin;
+use ui_hp_display::{HealthDisplayPlugin};
+use ui_orc_counter::OrcDeathCounterPlugin;
+use crate::player_code::{ PlayerHealthPlugin};
 use orc::OrcPlugin;
-use hp_display::{HealthDisplayPlugin};
-use audio::AudioPlugin; // Import the AudioPlugin
-use crate::player_code::{PlayerPhysicsPlugin, PlayerHealthPlugin};
+use shield::ShieldPlugin;
 
 fn main() {
     App::new()
@@ -34,7 +35,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Misspelled".into(),
-                        resolution: (1600.0, 900.0).into(),
+                        resolution: (1200.0, 900.0).into(),
                         resizable: true,
                         ..default()
                     }),
@@ -44,7 +45,6 @@ fn main() {
 
         // ——— Rapier 2D physics ———
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())   // Core physics
-        .add_plugins(RapierDebugRenderPlugin::default())             // Debug overlay
         .insert_resource(DebugRenderContext {
             enabled: true,     // Turn on all colliders/hurtboxes
             ..default()
@@ -69,6 +69,8 @@ fn main() {
         .add_plugins(blink::BlinkPlugin)
         .add_plugins(ShieldPlugin)
         .add_plugins(spellbook::SpellbookPlugin)
+
+        .add_plugins(OrcDeathCounterPlugin)
 
         // ——— Startup & Update loops ———
         .add_systems(Startup, setup_game)
@@ -106,7 +108,6 @@ fn setup_game(
     let texture = asset_server.load("characters_atlas.png");
     let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 32), 9, 10, None, None);
     let texture_atlas_layout = atlas_layouts.add(layout);
-
     // Spawn the player
     player_code::setup_player(commands, texture, texture_atlas_layout);
 

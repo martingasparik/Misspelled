@@ -1,3 +1,4 @@
+use std::process::exit;
 use bevy::prelude::*;
 use bevy::asset::Handle;
 use bevy::image::Image;
@@ -11,6 +12,7 @@ use crate::animation::{AnimationConfig, SpriteState};
 use crate::player_animation::{FIRST_IDLE, FPS_IDLE, LAST_IDLE};
 use crate::player_movement::{FacingDirection, MovementState};
 use crate::orc::collision::AttackHitbox;
+use crate::ui_orc_counter::OrcDeathCounter;
 
 #[derive(Component)]
 pub struct Player;
@@ -102,7 +104,7 @@ pub fn setup_player(
 
         // Game logic components
         Player,
-        Health::new(10.0),
+        Health::new(20.0),
         Shield::new(0.0),
         FacingDirection {facing_right: true},
         MovementState::Idle,
@@ -149,6 +151,7 @@ fn handle_player_damage(
     mut commands: Commands,
     mut damage_events: EventReader<PlayerDamageEvent>,
     mut player_query: Query<(Entity, &mut Health, &mut Shield), (With<Player>, Without<Invulnerable>)>,
+    kill_count: Res<OrcDeathCounter>,
 ) {
     // Only process if player exists and isn't invulnerable
     if let Ok((player_entity, mut health, mut shield)) = player_query.get_single_mut() {
@@ -173,6 +176,11 @@ fn handle_player_damage(
                 // No shield, damage goes directly to health
                 health.health -= damage_amount;
                 info!("No shield! Player health reduced to {:.1}", health.health);
+            }
+
+            if health.health <= 0.0 {
+                println!("Your dead!\nOrcs killed: {}", kill_count.count);
+                exit(0);
             }
 
             // Add invulnerability period

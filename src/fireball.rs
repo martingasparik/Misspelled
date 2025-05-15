@@ -11,6 +11,7 @@ use crate::animation::AnimationConfig;
 use crate::orc::{OrcEnemy, OrcState};
 use crate::orc::collision::{HurtHitbox, AttackHitbox};
 use crate::player_code::Health;
+use crate::ui_orc_counter::OrcDeathEvent;
 
 pub const FIREBALL_SPEED: f32 = 200.0;
 pub const FIREBALL_LIFETIME: f32 = 5.0;
@@ -155,12 +156,12 @@ fn handle_fireball_casting(
                         .with_scale(Vec3::splat(2.0)), // Size of the fireball
                     Fireball::new(direction, FIREBALL_DAMAGE),
                     fireball_animation,
-                    
+
                     // Add physics components for collision detection
                     Collider::ball(8.0),
                     Sensor, // Make it a sensor so it doesn't push things
                     ActiveEvents::COLLISION_EVENTS,
-                    
+
                     Name::new("Fireball"),
                 ));
             }
@@ -191,6 +192,7 @@ fn handle_fireball_collisions(
     attack_hitbox_query: Query<(Entity, &crate::orc::collision::AttackHitbox)>,
     mut orc_query: Query<(&mut OrcEnemy, &mut Health)>,
     mut despawn_events: EventWriter<FireballDespawnEvent>,
+    mut orc_death_events: EventWriter<OrcDeathEvent>,
 ) {
     // iterate all new collision events
     for event in collision_events.read() {
@@ -229,6 +231,9 @@ fn handle_fireball_collisions(
                             // → enter dying state
                             orc.state = OrcState::Dying;
 
+                            // Send death event for the counter
+                            orc_death_events.send(OrcDeathEvent);
+
                             // lock its position and start your death timer
                             commands.entity(orc_ent)
                                 .insert(LockedAxes::TRANSLATION_LOCKED_X | LockedAxes::TRANSLATION_LOCKED_Y)
@@ -239,7 +244,7 @@ fn handle_fireball_collisions(
                                     Group::NONE  // Don't collide with anything
                                 ));
                             info!("Orc dying, disabling all collisions!");
-                            
+
                             // immediately tear down all hurtboxes
                             for (hb_ent, hurtbox) in hurtbox_query.iter() {
                                 if hurtbox.owner == orc_ent {
@@ -247,7 +252,7 @@ fn handle_fireball_collisions(
                                     commands.entity(hb_ent).despawn_recursive();
                                 }
                             }
-                            
+
                             // immediately tear down all attack hitboxes for this orc
                             for (attack_ent, attack_hitbox) in attack_hitbox_query.iter() {
                                 if attack_hitbox.owner == orc_ent {
@@ -276,7 +281,7 @@ fn process_fireball_despawn_events(
 ) {
     for event in despawn_events.read() {
         let entity = event.0;
-        
+
         // Only despawn if the entity still exists and is a fireball
         if fireball_query.get(entity).is_ok() {
             commands.entity(entity).despawn_recursive();
@@ -297,7 +302,7 @@ fn despawn_expired_fireballs(
 
         // Tick the lifetime timer directly
         fireball.lifetime.tick(time.delta());
-        
+
         // Check if lifetime has expired
         if fireball.lifetime.finished() {
             info!("Fireball lifetime expired, marking for despawn");
@@ -318,7 +323,7 @@ fn handle_death_timers(
 ) {
     for (entity, mut timer) in query.iter_mut() {
         timer.timer.tick(time.delta());
-        
+
         // Double-check for any remaining hitboxes
         if orc_query.get(entity).is_ok() {
             // This is an orc with a death timer
@@ -328,7 +333,7 @@ fn handle_death_timers(
                     commands.entity(hitbox_entity).despawn_recursive();
                 }
             }
-            
+
             // Check for any lingering attack hitboxes
             for (hitbox_entity, hitbox) in attack_hitboxes.iter() {
                 if hitbox.owner == entity {
@@ -336,7 +341,7 @@ fn handle_death_timers(
                 }
             }
         }
-        
+
         // Rest of your code stays the same
     }
 }
